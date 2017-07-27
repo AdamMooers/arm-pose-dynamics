@@ -11,7 +11,7 @@
 #define DEPTHCAMMANAGER_H
 
 #include <librealsense/rs.hpp>
-#include "opencv2/types.hpp"
+#include "opencv2/core/core.hpp"
 
 /**
  * Manages a depth camera over its lifetime. Also provides support for conversion
@@ -25,12 +25,12 @@ class depth_cam
          * devices are not supported, but support can be added easily by modifying
          * this function.
          */
-        depth_cam * depth_cam_init();
+        depth_cam * depth_cam_init( void );
 
         /**
          * Activates the depth camera stream. 
          */
-        void start_stream();
+        void start_stream( void );
 
         /**
          * Polls the device for the next frame. This function polls in the same thread 
@@ -38,8 +38,11 @@ class depth_cam
          * reference to the latest depth frame from the camera. Note that the stream
          * must be started before this function is called.
          */
-        void get_next_frame();
-        
+        void capture_next_frame( void );
+
+        /**
+         * Retrieves a reference to the next frame. 
+
         /**
          * Removes the background from the source image given based on a position-based heuristic
          * in the source image pixel domain. The resulting image is stored in the modifier
@@ -63,13 +66,12 @@ class depth_cam
         depth_cam();
 
     private:
-        rs::device * dev;           // Currently the library only supports a single depth cam
-        rs::context ctx;            // Manages all of the realsense devices
-        rs_device * dev;            // Pointer to info about the device itself
-        rs_intrinsics depth_intrin; // Depth intrinics of the frame, updates with each new frame
+        rs::device * dev;               // Currently the library only supports a single depth cam
+        rs::context ctx;                // Manages all of the realsense devices
+        rs::intrinsics depth_intrin;    // Depth intrinics of the frame, updates with each new frame
 
-        const uint16_t * srcImg;            // A reference to the source image  
-        uint16_t * modifiedSrc = nullptr;   // A reference to the modified image
+        const uint16_t * srcImg;        // A reference to the source image  
+        cv::Mat modifiedSrc();          // A reference to the modified image
 }
 
 

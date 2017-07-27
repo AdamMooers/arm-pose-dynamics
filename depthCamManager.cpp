@@ -41,9 +41,22 @@ void depth_cam::start_stream()
 }
 
 
-void depth_cam::to_depth_frame( void )
+void depth_cam::capture_next_frame()
 {
-    
+    // Use polling to capture the next frame
+    dev->wait_for_frames();
+
+    // Update depth frame meta info
+    depth_intrin = dev->get_stream_intrinsics(rs::stream::depth);
+
+    // Retrieve a reference to the raw depth frame
+    srcImg = (const uint16_t *)dev->get_frame_data(rs::stream::depth);
+
+    // Convert to an OpenCV style matrix for consistency
+    cv::Mat sourceInMatForm = cv::Mat(depth_intrin.height, depth_intrin.width, uint16_t, srcImg);
+
+    // Make a copy of the depth frame for editing
+    sourceInMatForm.copyTo(modifiedSrc);
 }
 
 depth_cam::depth_cam()
