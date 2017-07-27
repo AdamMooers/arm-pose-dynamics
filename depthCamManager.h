@@ -11,7 +11,7 @@
 #define DEPTHCAMMANAGER_H
 
 #include <librealsense/rs.hpp>
-#include "types.hpp"
+#include "opencv2/types.hpp"
 
 /**
  * Manages a depth camera over its lifetime. Also provides support for conversion
@@ -28,9 +28,18 @@ class depth_cam
         depth_cam * depth_cam_init();
 
         /**
-         * Converts the given depth frame into a point cloud from the camera frame of reference.
+         * Activates the depth camera stream. 
          */
+        void start_stream();
 
+        /**
+         * Polls the device for the next frame. This function polls in the same thread 
+         * as it is called in. If no error occurs, the manager will have an internal
+         * reference to the latest depth frame from the camera. Note that the stream
+         * must be started before this function is called.
+         */
+        void get_next_frame();
+        
         /**
          * Removes the background from the source image given based on a position-based heuristic
          * in the source image pixel domain. The resulting image is stored in the modifier
@@ -41,10 +50,21 @@ class depth_cam
          *
          * @param   slope       the pixelwise direction to travel while searching for the start position.
          *                      This vector is added to the current position each loop iteration.
+         *
+         * @param   maxDist     the maximum distance allowed for two points to be considered neighbors (in meters)
          */
-         bool removeBackground(float startLoc, Point slope)
+        void remove_background(float startLoc, Point slope);
+
+        /**
+         * Converts the given depth frame into a point cloud from the camera frame of reference.
+         */
+        void to_depth_frame( void );
+
+        depth_cam();
 
     private:
+        rs::device * dev;           // Currently the library only supports a single depth cam
+        rs::context ctx;            // Manages all of the realsense devices
         rs_device * dev;            // Pointer to info about the device itself
         rs_intrinsics depth_intrin; // Depth intrinics of the frame, updates with each new frame
 
@@ -53,7 +73,7 @@ class depth_cam
 }
 
 
-
+/*
 class point_cloud
 {
     public:
@@ -70,5 +90,6 @@ class point_cloud
         // length size
         // cvVector array
 }
+*/
 
  #endif
