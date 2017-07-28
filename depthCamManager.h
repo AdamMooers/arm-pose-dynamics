@@ -25,7 +25,7 @@ class depth_cam
          * devices are not supported, but support can be added easily by modifying
          * this function.
          */
-        depth_cam * depth_cam_init( void );
+        bool depth_cam_init( void );
 
         /**
          * Activates the depth camera stream. 
@@ -56,7 +56,7 @@ class depth_cam
          *
          * @param   maxDist     the maximum distance allowed for two points to be considered neighbors (in meters)
          */
-        void remove_background(float startLoc, Point slope);
+        void remove_background(float startLoc, cv::Point slope);
 
         /**
          * Converts the given depth frame into a point cloud from the camera frame of reference.
@@ -66,13 +66,13 @@ class depth_cam
         depth_cam();
 
     private:
+        cv::Mat modifiedSrc = cv::Mat();// A reference to the modified image
         rs::device * dev;               // Currently the library only supports a single depth cam
         rs::context ctx;                // Manages all of the realsense devices
         rs::intrinsics depth_intrin;    // Depth intrinics of the frame, updates with each new frame
 
         const uint16_t * srcImg;        // A reference to the source image  
-        cv::Mat modifiedSrc();          // A reference to the modified image
-}
+};
 
 
 /*

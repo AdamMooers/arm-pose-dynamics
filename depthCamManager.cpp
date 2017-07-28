@@ -5,15 +5,15 @@
  */
 
 #include "depthCamManager.h"
+#include <cstdio>
 
-depth_cam * depth_cam::depth_cam_init() try
+bool depth_cam::depth_cam_init() try
 {
 
     // Are any realsense devices connected?
     if(ctx.get_device_count() == 0) 
     {
-        printf("No realsense devices are connected to the system at this time.\n")
-        return nullptr;
+        throw std::runtime_error( "No realsense devices are connected to the system at this time." );
     }
 
     dev = ctx.get_device(0);
@@ -21,7 +21,7 @@ depth_cam * depth_cam::depth_cam_init() try
     // Configure the input stream
     dev->enable_stream(rs::stream::depth, rs::preset::best_quality);
 
-    return dev;
+    return true;
 }
 catch(const rs::error & e)
 {
@@ -30,10 +30,10 @@ catch(const rs::error & e)
     printf("    %s\n", e.what());
 
     dev = nullptr;
-    return nullptr;
+    return false;
 }
 
-void depth_cam::start_stream()
+void depth_cam::start_stream( void )
 {
     if (dev) {
         dev->start();
@@ -41,7 +41,7 @@ void depth_cam::start_stream()
 }
 
 
-void depth_cam::capture_next_frame()
+void depth_cam::capture_next_frame( void )
 {
     // Use polling to capture the next frame
     dev->wait_for_frames();
@@ -53,14 +53,20 @@ void depth_cam::capture_next_frame()
     srcImg = (const uint16_t *)dev->get_frame_data(rs::stream::depth);
 
     // Convert to an OpenCV style matrix for consistency
-    cv::Mat sourceInMatForm = cv::Mat(depth_intrin.height, depth_intrin.width, uint16_t, srcImg);
+    cv::Mat sourceInMatForm(depth_intrin.height, depth_intrin.width, CV_16UC1, (void *)srcImg);
 
     // Make a copy of the depth frame for editing
     sourceInMatForm.copyTo(modifiedSrc);
 }
 
-depth_cam::depth_cam()
+depth_cam::depth_cam( void )
 {
     // Only display warnings (avoid verbosity)
     rs::log_to_console(rs::log_severity::warn);
+}
+
+int main()
+{
+    printf("Have a nice day!\n");
+    return 0;
 }
