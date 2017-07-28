@@ -9,14 +9,18 @@
 
 bool depth_cam::depth_cam_init() try
 {
+    if (ctx == nullptr)
+    {
+        ctx = new rs::context();
+    }
 
     // Are any realsense devices connected?
-    if(ctx.get_device_count() == 0) 
+    if(ctx->get_device_count() == 0) 
     {
         throw std::runtime_error( "No realsense devices are connected to the system at this time." );
     }
 
-    dev = ctx.get_device(0);
+    dev = ctx->get_device(0);
 
     // Configure the input stream
     dev->enable_stream(rs::stream::depth, rs::preset::best_quality);
@@ -65,8 +69,10 @@ depth_cam::depth_cam( void )
     rs::log_to_console(rs::log_severity::warn);
 }
 
-int main()
+depth_cam::~depth_cam( void )
 {
-    printf("Have a nice day!\n");
-    return 0;
+    if (ctx != nullptr)
+    {
+        delete ctx;
+    }
 }

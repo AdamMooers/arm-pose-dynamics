@@ -63,15 +63,16 @@ class depth_cam
          */
         void to_depth_frame( void );
 
-        depth_cam();
+        depth_cam( void );
+        ~depth_cam( void );
 
     private:
-        cv::Mat modifiedSrc = cv::Mat();// A reference to the modified image
-        rs::device * dev;               // Currently the library only supports a single depth cam
-        rs::context ctx;                // Manages all of the realsense devices
-        rs::intrinsics depth_intrin;    // Depth intrinics of the frame, updates with each new frame
+        cv::Mat modifiedSrc = cv::Mat();    // A reference to the modified image
+        rs::device * dev = nullptr;         // Currently the library only supports a single depth cam
+        rs::context * ctx = nullptr;        // Manages all of the realsense devices
+        rs::intrinsics depth_intrin;        // Depth intrinics of the frame, updates with each new frame
 
-        const uint16_t * srcImg;        // A reference to the source image  
+        const uint16_t * srcImg;            // A reference to the source image  
 };
 
 

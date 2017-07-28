@@ -1,15 +1,17 @@
 .PHONY: all
 
 COMPILER = g++ -std=c++11
-SOURCE = depthCamManager
 PNAME = pose
 FLAGS = -Wall
 
-all: depthCamManager.o
-	$(COMPILER) $(SOURCE).o $(FLAGS) `pkg-config --cflags --libs opencv` -lrealsense -o $(PNAME)
+all: pose.o depthCamManager.o
+	$(COMPILER) pose.o depthCamManager.o $(FLAGS) `pkg-config --cflags --libs opencv` -lrealsense -o $(PNAME)
+
+pose.o: pose.cpp
+	$(COMPILER) -c pose.cpp
 
 depthCamManager.o: depthCamManager.cpp depthCamManager.h
-	$(COMPILER) -c $(SOURCE).cpp
+	$(COMPILER) -c depthCamManager.cpp
 
 .PHONY: clean
 clean:
