@@ -11,7 +11,7 @@
 
 int main()
 {
-    depth_cam camTop;
+    depth_cam camTop(0.4);
     camTop.depth_cam_init();    // Connect to the depth camera
     camTop.start_stream();
 
@@ -22,9 +22,8 @@ int main()
     for(;;)
     {
         camTop.capture_next_frame();
-
+        camTop.filter_background( 0.05f, 3 );
         cv::imshow( window_name, camTop.cur_src );
-        camTop.filter_background( 0.1f, 2 );
 
         // Break if a key is pressed
         if (cv::waitKey(1) != -1)

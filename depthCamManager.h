@@ -75,10 +75,15 @@ class depth_cam
 
         cv::Mat cur_src;        // The image in the current state of the pipeline
 
-        depth_cam( void );
+        /**
+         * @param scale_factor Sets the scale factor of the depth camera.
+         */
+        depth_cam( float scale_factor );
+        
         ~depth_cam( void );
 
     private:
+        float scale_factor;                 // The scale factor to apply to the depth image before processing
         rs::device * dev = nullptr;         // Currently the library only supports a single depth cam
         rs::context * ctx = nullptr;        // Manages all of the realsense devices
         rs::intrinsics depth_intrin;        // Depth intrinics of the frame, updates with each new frame
@@ -100,6 +105,16 @@ class depth_cam
          * @return  the area of the cluster including the initial pixel in number of pixels
          */
         int img_BFS(int x, int y, int cluster_id, cv::Mat& input_img, cv::Mat& cluster_img, float maxDist, int manhattan);   
+
+        /**
+         * Zeroes all elements of the image matrix except for those with the given value. Those
+         * within the given value are replaced by the selected alternative.
+         *
+         * @param   input_img   the image to overwrite
+         * @param   target      the value to target
+         * @param   replacement the replacement value
+         */
+        int threshhold_exactly(cv::Mat& input_img, int32_t target, int32_t replacement);
 
         const uint16_t * srcImg;            // A reference to the source image  
 };
