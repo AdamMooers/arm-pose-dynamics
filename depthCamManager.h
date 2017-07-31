@@ -63,7 +63,17 @@ class depth_cam
          */
         void to_depth_frame( void );
 
-        cv::Mat modifiedSrc = cv::Mat();    // A reference to the modified image
+        /**
+         * Removes the background from the captured frame by segmenting the image into groups of close
+         * pixels (based on distance). The largest group is kept. All other groups are erased. The result
+         * overwrites the pipeline_src buffer.
+         *
+         * @param   maxDist     the maximum distance between which two points can be in the same group (meters, depth)
+         * @param   manhattan   the neighborhood to explore is within this manhattan distance of the point
+         */
+        void filter_background( float maxDist, int manhattan );
+
+        cv::Mat cur_src;        // The image in the current state of the pipeline
 
         depth_cam( void );
         ~depth_cam( void );
@@ -72,6 +82,24 @@ class depth_cam
         rs::device * dev = nullptr;         // Currently the library only supports a single depth cam
         rs::context * ctx = nullptr;        // Manages all of the realsense devices
         rs::intrinsics depth_intrin;        // Depth intrinics of the frame, updates with each new frame
+
+        /**
+         * Runs BFS on the given image starting from a given pixel and expanding outwards.
+         * All pixels in the same group are marked with the index in the output image and
+         * zeroed in the input image. Maxdist and manhattan are treated the same way as
+         * in filter_background.
+         *
+         * @param   x           the x-coordinate of the start pixel (zero-based)
+         * @param   y           the y-coordinate of the start pixel (zero-based)
+         * @param   cluster_id  the id of the cluster
+         * @param   input_img   the source image to partition
+         * @param   cluster_img the output image containing clusters
+         * @param   maxDist     the maximum distance between which two points can be in the same group (meters, depth)
+         * @param   manhattan   the neighborhood to explore is within this manhattan distance of the point
+         *
+         * @return  the area of the cluster including the initial pixel in number of pixels
+         */
+        int img_BFS(int x, int y, int cluster_id, cv::Mat& input_img, cv::Mat& cluster_img, float maxDist, int manhattan);   
 
         const uint16_t * srcImg;            // A reference to the source image  
 };

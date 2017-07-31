@@ -23,7 +23,8 @@ int main()
     {
         camTop.capture_next_frame();
 
-        cv::imshow( window_name, camTop.modifiedSrc );
+        cv::imshow( window_name, camTop.cur_src );
+        camTop.filter_background( 0.1f, 2 );
 
         // Break if a key is pressed
         if (cv::waitKey(1) != -1)
