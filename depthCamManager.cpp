@@ -1,7 +1,7 @@
 /**
  * Author: Adam Mooers
  *
- * Implements the libraries found in depthCamManager.h.
+ * Implements the library found in depthCamManager.h.
  */
 
 #include "depthCamManager.h"
@@ -48,6 +48,9 @@ void depth_cam::start_stream( void )
 
 void depth_cam::capture_next_frame( void )
 {
+    // Prevent system from using the previous frame's area
+    masked_area = 0;
+
     // Use polling to capture the next frame
     dev->wait_for_frames();
 
@@ -103,6 +106,9 @@ void depth_cam::filter_background( float maxDist, int manhattan )
             }
         }
     }
+
+    // Save a reference to the number of non-zero pixels
+    masked_area = largest_ind_area;
 
     // Remove background in the original depth source
     mask_by_cluster_id(clustered, largest_ind, cur_src);

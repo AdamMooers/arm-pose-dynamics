@@ -12,6 +12,7 @@
 
 #include <librealsense/rs.hpp>
 #include "opencv2/core/core.hpp"
+#include "pointcloud.h"
 
 /**
  * Manages a depth camera over its lifetime. Also provides support for conversion
@@ -83,6 +84,7 @@ class depth_cam
         ~depth_cam( void );
 
     private:
+        int masked_area;                    // Area of the masked region after the background has been filtered
         float scale_factor;                 // The scale factor to apply to the depth image before processing
         rs::device * dev = nullptr;         // Currently the library only supports a single depth cam
         rs::context * ctx = nullptr;        // Manages all of the realsense devices
@@ -118,25 +120,5 @@ class depth_cam
 
         const uint16_t * srcImg;            // A reference to the source image  
 };
-
-
-/*
-class point_cloud
-{
-    public:
-        // Set Instance at index (possible realloc)
-        // Transform Point
-        // Tranform cloud
-        // Set transform
-        // Set transform from file
-        // Clip
-        // Normalize
-        // Get calibration transform from plane
-
-    private:
-        // length size
-        // cvVector array
-}
-*/
 
  #endif
