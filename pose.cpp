@@ -6,14 +6,47 @@
  * the result in realtime.
  */
 
+#define PREFILTER_MANHATTAN_DIST 4
+#define PREFILTER_DEPTH_MAX_DIST 0.05f
+
+#include <strings.h>
 #include "depthCamManager.h"
 #include "opencv2/highgui/highgui.hpp"
 
-int main()
+enum opModes {TRACKING, CALIBRATION};
+
+opModes curMode;
+
+/**
+ * Parses the user input. Handles errors such as incorrect argument count, etc.
+ */
+void parse_input(int argc, char* argv[]) 
 {
-    depth_cam camTop(0.4);
-    camTop.depth_cam_init();    // Connect to the depth camera
-    camTop.start_stream();
+    if (argc > 2)
+    {
+        printf("Correct Usage: %s [calibrate]\n", argv[0]);
+        exit(0);
+    }
+
+    if (argc == 2 && strcmp(argv[1], "calibrate") == 0)
+    {
+        printf("Entering calibration mode...\n");
+        curMode = CALIBRATION;
+    }
+    else
+    {
+        printf("Entering tracking mode...\n");
+        curMode = TRACKING;
+    }
+}
+
+int main(int argc, char* argv[])
+{
+    parse_input(argc, argv);
+
+    depth_cam cam_top(0.4);
+    cam_top.depth_cam_init();    // Connect to the depth camera
+    cam_top.start_stream();
 
     std::string window_name = "depth feed";
     // Create a window
@@ -21,9 +54,9 @@ int main()
 
     for(;;)
     {
-        camTop.capture_next_frame();
-        camTop.filter_background( 0.05f, 3 );
-        cv::imshow( window_name, camTop.cur_src );
+        cam_top.capture_next_frame();
+        cam_top.filter_background(PREFILTER_DEPTH_MAX_DIST, PREFILTER_MANHATTAN_DIST);
+        cv::imshow( window_name, cam_top.cur_src );
 
         // Break if a key is pressed
         if (cv::waitKey(1) != -1)

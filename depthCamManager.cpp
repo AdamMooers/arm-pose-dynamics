@@ -46,7 +46,6 @@ void depth_cam::start_stream( void )
     }
 }
 
-
 void depth_cam::capture_next_frame( void )
 {
     // Use polling to capture the next frame
@@ -65,8 +64,8 @@ void depth_cam::capture_next_frame( void )
     sourceInMatForm.copyTo(cur_src);
 }
 
- void depth_cam::filter_background( float maxDist, int manhattan )
- {
+void depth_cam::filter_background( float maxDist, int manhattan )
+{
     // Info about the largest index
     int largest_ind = -1;
     int largest_ind_area = 0;
@@ -79,16 +78,20 @@ void depth_cam::capture_next_frame( void )
     cv::resize(cur_src, scaled_src, cv::Size(0, 0), scale_factor, scale_factor);
     cur_src = scaled_src;
 
+    // Create a new mask for the image
+    cv::Mat subject_mask;
+    cur_src.copyTo(subject_mask);
+
     cv::Mat clustered = cv::Mat::zeros(cur_src.rows, cur_src.cols, CV_32SC1);
 
-    for( int i = 0; i < cur_src.rows; ++i)
+    for( int i = 0; i < subject_mask.rows; ++i)
     {
-        p = cur_src.ptr<uint16_t>(i);
-        for ( int j = 0; j < cur_src.cols; ++j)
+        p = subject_mask.ptr<uint16_t>(i);
+        for ( int j = 0; j < subject_mask.cols; ++j)
         {
             if (p[j] != 0)  // For each non-zero pixel
             {
-                int current_ind_area = img_BFS(j, i, current_ind, cur_src, clustered, maxDist, manhattan);
+                int current_ind_area = img_BFS(j, i, current_ind, subject_mask, clustered, maxDist, manhattan);
 
                 // Is the new cluster bigger
                 if (current_ind_area > largest_ind_area)
@@ -101,10 +104,9 @@ void depth_cam::capture_next_frame( void )
         }
     }
 
-    threshhold_exactly(clustered, largest_ind, 50000);
-
-    cur_src = clustered;
- }
+    // Remove background in the original depth source
+    mask_by_cluster_id(clustered, largest_ind, cur_src);
+}
 
 int depth_cam::img_BFS( int x, int y, int cluster_id, cv::Mat& input_img, cv::Mat& cluster_img, float maxDist, int manhattan)
 {
@@ -172,16 +174,19 @@ int depth_cam::img_BFS( int x, int y, int cluster_id, cv::Mat& input_img, cv::Ma
     return cluster_area;
 }
 
-int depth_cam::threshhold_exactly(cv::Mat& input_img, int32_t target, int32_t replacement)
+int depth_cam::mask_by_cluster_id(cv::Mat& cluster_img, int32_t cluster_id, cv::Mat& output_img)
 {
-    int32_t* p;
+    int32_t* p_cl;
+    uint16_t* p_out;
 
-    for( int i = 0; i < input_img.rows; ++i)
+    for( int i = 0; i < cluster_img.rows; ++i)
     {
-        p = input_img.ptr<int32_t>(i);
-        for ( int j = 0; j < input_img.cols; ++j)
+        p_cl = cluster_img.ptr<int32_t>(i);
+        p_out = output_img.ptr<uint16_t>(i);
+        for ( int j = 0; j < cluster_img.cols; ++j)
         {
-            p[j] = (p[j]==target) ? replacement : 0;
+            // Zero all values except those in the target cluster
+            p_out[j] = (p_cl[j] == cluster_id) ? p_out[j] : 0;
         }
     }
 }

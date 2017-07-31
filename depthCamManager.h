@@ -79,7 +79,7 @@ class depth_cam
          * @param scale_factor Sets the scale factor of the depth camera.
          */
         depth_cam( float scale_factor );
-        
+
         ~depth_cam( void );
 
     private:
@@ -112,9 +112,9 @@ class depth_cam
          *
          * @param   input_img   the image to overwrite
          * @param   target      the value to target
-         * @param   replacement the replacement value
+         * @param   output      the image to filter
          */
-        int threshhold_exactly(cv::Mat& input_img, int32_t target, int32_t replacement);
+        int mask_by_cluster_id(cv::Mat& cluster_img, int32_t cluster_id, cv::Mat& output_img);
 
         const uint16_t * srcImg;            // A reference to the source image  
 };
