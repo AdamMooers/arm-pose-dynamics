@@ -14,7 +14,6 @@ void pointCloud::clear(void)
 
 void pointCloud::add_point(cv::Mat point)
 {
-    // printf("cursize: %d\n", cur_size);
     cloud_array.push_back(point);
 }
 
@@ -43,9 +42,7 @@ void pointCloud::get_transform_from_cloud(void)
     // Calculate the least-squares plane
     beta = (X_trans*X).inv()*(X_trans*y);
     
-    std::cout << beta << "\n";
-
-    //exit(0);
+    std::cout << beta << "\n\n";
 }
 
 pointCloud::pointCloud(void)
