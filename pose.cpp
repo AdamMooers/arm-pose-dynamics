@@ -44,13 +44,16 @@ int main(int argc, char* argv[])
 {
     parse_input(argc, argv);
 
-    depth_cam cam_top(0.4);
+    float scale_size = curMode == CALIBRATION?0.02:0.5;
+
+    depth_cam cam_top(scale_size);
     cam_top.depth_cam_init();    // Connect to the depth camera
     cam_top.start_stream();
 
     std::string window_name = "depth feed";
     // Create a window
-    cv::namedWindow(window_name, CV_WINDOW_AUTOSIZE );
+    cv::namedWindow(window_name, CV_WINDOW_NORMAL );
+    cv::resizeWindow(window_name, 640, 480);
 
     for(;;)
     {

@@ -27,7 +27,7 @@ void pointCloud::get_transform_from_cloud(void)
     };
 
     cv::Mat X, X_trans, beta, y;
-    
+
     y = cloud_array(cv::Rect(cloud_array.cols-1,0,1,cloud_array.rows));
 
     cv::hconcat(X_components, 2, X);
@@ -35,8 +35,11 @@ void pointCloud::get_transform_from_cloud(void)
     // Get x'
     cv::transpose(X, X_trans);
 
-    beta = (X*X_trans).inv()*X_trans;
+    //beta = (X*X_trans).inv()*X_trans;
     
+    //std::cout << cloud_array << X << "\n";
+
+    exit(0);
 }
 
 pointCloud::pointCloud(void)
