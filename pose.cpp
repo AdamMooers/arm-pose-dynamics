@@ -56,7 +56,9 @@ int main(int argc, char* argv[])
     {
         cam_top.capture_next_frame();
         cam_top.filter_background(PREFILTER_DEPTH_MAX_DIST, PREFILTER_MANHATTAN_DIST);
-        cv::imshow( window_name, cam_top.cur_src );
+        cam_top.to_depth_frame();
+
+        cv::imshow(window_name, cam_top.cur_src);
 
         // Break if a key is pressed
         if (cv::waitKey(1) != -1)

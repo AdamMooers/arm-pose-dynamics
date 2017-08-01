@@ -94,7 +94,7 @@ void depth_cam::to_depth_frame(void)
                 rs::float2 depth_pixel = {(float)j/scale_factor, (float)i/scale_factor};
                 float depth_in_meters = p[j] * scale;
                 rs::float3 depth_point = depth_intrin.deproject(depth_pixel, depth_in_meters);
-
+                
                 // Convert to opencv vector format first
                 cv::Vec3f depth_point_cv = {depth_point.x, depth_point.y, depth_point.z};
                 cloud->add_point(depth_point_cv);
