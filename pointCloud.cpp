@@ -11,7 +11,7 @@ void pointcloud::clear(void)
     cur_size = 0;   // Nothing in the array now
 }
 
-void pointcloud::add_point(Vec3i point)
+void pointcloud::add_point(cv::Vec3i point)
 {
     cloud_array[cur_size] = point;
     cur_size++;
@@ -19,7 +19,7 @@ void pointcloud::add_point(Vec3i point)
 
 point_cloud::point_cloud(int max_size)
 {
-    cloud_array = new Vec3i[max_size];
+    cloud_array = new cv::Vec3i[max_size];
 }
 
 point_cloud::~point_cloud(int max_size)

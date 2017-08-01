@@ -10,6 +10,8 @@
 #ifndef POINTCLOUD_H
 #define POINTCLOUD_H
 
+#include "opencv2/core/core.hpp"
+
 class point_cloud
 {
     public:
@@ -32,7 +34,7 @@ class point_cloud
          *
          * @param   point       the point to add
          */
-        void add_point(Vec3i point);
+        void add_point(cv::Vec3i point);
 
         /**
          * Creates a new point cloud of the given buffer size. The object
@@ -46,6 +48,6 @@ class point_cloud
         int max_size;                       // The maximum size of the array
         int cur_size;                       // The currently-filled portion of the array
         cv::Vec3i *cloud_array = nullptr;   // The array for the points in the cloud
-}
+};
 
 #endif

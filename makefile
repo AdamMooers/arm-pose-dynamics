@@ -4,7 +4,7 @@ COMPILER = g++ -std=c++11
 PNAME = pose
 FLAGS = -Wall
 
-all: pose.o depthCamManager.o
+all: pose.o depthCamManager.o pointCloud.o
 	$(COMPILER) pose.o depthCamManager.o pointcloud.o $(FLAGS) `pkg-config --cflags --libs opencv` -lrealsense -o $(PNAME)
 
 pose.o: pose.cpp
@@ -13,8 +13,8 @@ pose.o: pose.cpp
 depthCamManager.o: depthCamManager.cpp depthCamManager.h
 	$(COMPILER) -c depthCamManager.cpp
 
-pointcloud.o: pointcloud.cpp pointcloud.h
-	$(COMPILER) -c pointcloud.cpp
+pointCloud.o: pointCloud.cpp pointCloud.h
+	$(COMPILER) -c pointCloud.cpp
 
 .PHONY: clean
 clean:
