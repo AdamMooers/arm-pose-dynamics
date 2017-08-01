@@ -91,7 +91,7 @@ void depth_cam::to_depth_frame(void)
             if (p[j] != 0)  // For each non-zero cell
             {
                 // Deproject depth pixel into 3D space and add it to the point cloud
-                rs::float2 depth_pixel = {(float)j, (float)i};
+                rs::float2 depth_pixel = {(float)j/scale_factor, (float)i/scale_factor};
                 float depth_in_meters = p[j] * scale;
                 rs::float3 depth_point = depth_intrin.deproject(depth_pixel, depth_in_meters);
 
