@@ -42,27 +42,9 @@ class depth_cam
         void capture_next_frame( void );
 
         /**
-         * Retrieves a reference to the next frame. 
-
-        /**
-         * Removes the background from the source image given based on a position-based heuristic
-         * in the source image pixel domain. The resulting image is stored in the modifier
-         * buffer the is used when point cloud conversion occurs.
-         * 
-         * @param   startLoc    the normalized starting position of the algorithm. (0,0) is in the top-left
-         *                      of the image. (1,1) is the bottom-right most pixel of the image.
-         *
-         * @param   slope       the pixelwise direction to travel while searching for the start position.
-         *                      This vector is added to the current position each loop iteration.
-         *
-         * @param   maxDist     the maximum distance allowed for two points to be considered neighbors (in meters)
-         */
-        void remove_background(float startLoc, cv::Point slope);
-
-        /**
          * Converts the given depth frame into a point cloud from the camera frame of reference.
          */
-        void to_depth_frame( void );
+        void to_depth_frame(void);
 
         /**
          * Removes the background from the captured frame by segmenting the image into groups of close
@@ -72,19 +54,19 @@ class depth_cam
          * @param   maxDist     the maximum distance between which two points can be in the same group (meters, depth)
          * @param   manhattan   the neighborhood to explore is within this manhattan distance of the point
          */
-        void filter_background( float maxDist, int manhattan );
+        void filter_background(float maxDist, int manhattan);
 
-        cv::Mat cur_src;        // The image in the current state of the pipeline
+        cv::Mat cur_src;                    // The image in the current state of the pipeline
+        pointCloud * cloud = nullptr;       // The point cloud for the current frame
 
         /**
          * @param scale_factor Sets the scale factor of the depth camera.
          */
-        depth_cam( float scale_factor );
+        depth_cam(float scale_factor);
 
         ~depth_cam( void );
 
     private:
-        int masked_area;                    // Area of the masked region after the background has been filtered
         float scale_factor;                 // The scale factor to apply to the depth image before processing
         rs::device * dev = nullptr;         // Currently the library only supports a single depth cam
         rs::context * ctx = nullptr;        // Manages all of the realsense devices

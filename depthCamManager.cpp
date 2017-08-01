@@ -48,9 +48,6 @@ void depth_cam::start_stream( void )
 
 void depth_cam::capture_next_frame( void )
 {
-    // Prevent system from using the previous frame's area
-    masked_area = 0;
-
     // Use polling to capture the next frame
     dev->wait_for_frames();
 
@@ -65,6 +62,45 @@ void depth_cam::capture_next_frame( void )
 
     // Make a copy of the depth frame for editing
     sourceInMatForm.copyTo(cur_src);
+
+    cv::resize(sourceInMatForm, cur_src, cv::Size(0, 0), scale_factor, scale_factor);
+
+    // Initialize the point cloud if it doesn't already exist
+    if (cloud == nullptr)
+    {
+        cloud = new pointCloud(cur_src.rows*cur_src.cols);
+    }
+    else
+    {
+        // Old depth frame is no longer valid
+        cloud->clear();
+    }
+}
+
+void depth_cam::to_depth_frame(void)
+{
+    float scale = dev->get_depth_scale();
+
+    uint16_t* p;
+    
+    for( int i = 0; i < cur_src.rows; ++i)
+    {
+        p = cur_src.ptr<uint16_t>(i);
+        for ( int j = 0; j < cur_src.cols; ++j)
+        {
+            if (p[j] != 0)  // For each non-zero cell
+            {
+                // Deproject depth pixel into 3D space and add it to the point cloud
+                rs::float2 depth_pixel = {(float)j, (float)i};
+                float depth_in_meters = p[j] * scale;
+                rs::float3 depth_point = depth_intrin.deproject(depth_pixel, depth_in_meters);
+
+                // Convert to opencv vector format first
+                cv::Vec3f depth_point_cv = {depth_point.x, depth_point.y, depth_point.z};
+                cloud->add_point(depth_point_cv);
+            }
+        }
+    }
 }
 
 void depth_cam::filter_background( float maxDist, int manhattan )
@@ -76,10 +112,6 @@ void depth_cam::filter_background( float maxDist, int manhattan )
     int current_ind = 0;
 
     uint16_t* p;
-
-    cv::Mat scaled_src;
-    cv::resize(cur_src, scaled_src, cv::Size(0, 0), scale_factor, scale_factor);
-    cur_src = scaled_src;
 
     // Create a new mask for the image
     cv::Mat subject_mask;
@@ -106,9 +138,6 @@ void depth_cam::filter_background( float maxDist, int manhattan )
             }
         }
     }
-
-    // Save a reference to the number of non-zero pixels
-    masked_area = largest_ind_area;
 
     // Remove background in the original depth source
     mask_by_cluster_id(clustered, largest_ind, cur_src);
@@ -210,5 +239,10 @@ depth_cam::~depth_cam( void )
     if (ctx != nullptr)
     {
         delete ctx;
+    }
+
+    if (cloud != nullptr)
+    {
+        delete cloud;
     }
 }

@@ -34,7 +34,7 @@ class pointCloud
          *
          * @param   point       the point to add
          */
-        void add_point(cv::Vec3i point);
+        void add_point(cv::Vec3f point);
 
         /**
          * Creates a new point cloud of the given buffer size. The object
@@ -49,7 +49,7 @@ class pointCloud
     private:
         int max_size;                       // The maximum size of the array
         int cur_size;                       // The currently-filled portion of the array
-        cv::Vec3i *cloud_array = nullptr;   // The array for the points in the cloud
+        cv::Vec3f *cloud_array = nullptr;   // The array for the points in the cloud
 };
 
 #endif
