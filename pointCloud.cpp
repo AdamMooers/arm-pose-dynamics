@@ -20,6 +20,11 @@ void pointCloud::add_point(cv::Mat point)
 
 void pointCloud::get_transform_from_cloud(void)
 {
+    if (cloud_array.rows < cloud_array.cols)
+    {
+        return;
+    }
+
     // The X matrix needs a column of ones
     cv::Mat X_components[] = {
         cv::Mat::ones(cloud_array.rows, 1, cloud_array.type()),         // just ones
@@ -35,11 +40,12 @@ void pointCloud::get_transform_from_cloud(void)
     // Get x'
     cv::transpose(X, X_trans);
 
-    //beta = (X*X_trans).inv()*X_trans;
+    // Calculate the least-squares plane
+    beta = (X_trans*X).inv()*(X_trans*y);
     
-    //std::cout << cloud_array << X << "\n";
+    std::cout << beta << "\n";
 
-    exit(0);
+    //exit(0);
 }
 
 pointCloud::pointCloud(void)

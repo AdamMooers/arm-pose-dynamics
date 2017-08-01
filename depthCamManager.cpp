@@ -86,16 +86,12 @@ void depth_cam::to_depth_frame(void)
                 rs::float2 depth_pixel = {(float)j/scale_factor, (float)i/scale_factor};
                 float depth_in_meters = p[j] * scale;
                 rs::float3 depth_point = depth_intrin.deproject(depth_pixel, depth_in_meters);
-                
-                std::cout << "(" << depth_point.x << "," << depth_point.y << "," << depth_point.z << ")\n";
 
                 // Convert to opencv vector format first
 
                 float point_arr[] = {depth_point.x, depth_point.y, depth_point.z};
 
                 cv::Mat depth_point_cv(1, 3, CV_32FC1, &point_arr);
-
-                std::cout << depth_point_cv << "\n";
 
                 cloud.add_point(depth_point_cv);
             }

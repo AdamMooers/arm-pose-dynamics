@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 {
     parse_input(argc, argv);
 
-    float scale_size = curMode == CALIBRATION?0.02:0.5;
+    float scale_size = curMode == CALIBRATION?0.1:0.5;
 
     depth_cam cam_top(scale_size);
     cam_top.depth_cam_init();    // Connect to the depth camera
