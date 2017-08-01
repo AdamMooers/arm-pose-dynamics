@@ -9,26 +9,16 @@
 
 void pointCloud::clear(void)
 {
-    cur_size = 0;   // Nothing in the array now
+    cloud_array.resize(0);   // Nothing in the array now
 }
 
-void pointCloud::add_point(cv::Vec3f point)
+void pointCloud::add_point(cv::Mat point)
 {
-   // printf("cursize: %d\n", cur_size);
-    cloud_array[cur_size] = point;
-    cur_size++;
+    // printf("cursize: %d\n", cur_size);
+    cloud_array.push_back(point);
 }
 
-pointCloud::pointCloud(int max_size)
+pointCloud::pointCloud(void)
 {
-    cloud_array = new cv::Vec3f[max_size];
-    clear();
-}
-
-pointCloud::~pointCloud()
-{
-    if (cloud_array != nullptr)
-    {
-        delete[] cloud_array;
-    }
+    cloud_array = cv::Mat(0, 3, CV_32FC1);
 }

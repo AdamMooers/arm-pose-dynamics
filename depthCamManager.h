@@ -56,8 +56,8 @@ class depth_cam
          */
         void filter_background(float maxDist, int manhattan);
 
-        cv::Mat cur_src;                    // The image in the current state of the pipeline
-        pointCloud * cloud = nullptr;       // The point cloud for the current frame
+        cv::Mat cur_src;    // The image in the current state of the pipeline
+        pointCloud cloud;   // The point cloud for the current frame
 
         /**
          * @param scale_factor Sets the scale factor of the depth camera.

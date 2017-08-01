@@ -1,6 +1,6 @@
 .PHONY: all
 
-COMPILER = g++ -std=c++11
+COMPILER = g++ -std=c++11 -g
 PNAME = pose
 FLAGS = -Wall
 

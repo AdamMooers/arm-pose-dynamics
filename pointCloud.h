@@ -34,22 +34,13 @@ class pointCloud
          *
          * @param   point       the point to add
          */
-        void add_point(cv::Vec3f point);
+        void add_point(cv::Mat point);
 
-        /**
-         * Creates a new point cloud of the given buffer size. The object
-         * which is stored in the point cloud can be up to this size.
-         *
-         * @param   max_size    the maximum buffer size
-         */
-        pointCloud (int max_size);
-
-        ~pointCloud();
+        pointCloud(void);
 
     private:
-        int max_size;                       // The maximum size of the array
-        int cur_size;                       // The currently-filled portion of the array
-        cv::Vec3f *cloud_array = nullptr;   // The array for the points in the cloud
+        int cur_size;                           // The currently-filled portion of the array
+        cv::Mat cloud_array;
 };
 
 #endif

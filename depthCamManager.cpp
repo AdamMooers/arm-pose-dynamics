@@ -65,16 +65,8 @@ void depth_cam::capture_next_frame( void )
 
     cv::resize(sourceInMatForm, cur_src, cv::Size(0, 0), scale_factor, scale_factor);
 
-    // Initialize the point cloud if it doesn't already exist
-    if (cloud == nullptr)
-    {
-        cloud = new pointCloud(cur_src.rows*cur_src.cols);
-    }
-    else
-    {
-        // Old depth frame is no longer valid
-        cloud->clear();
-    }
+    // Old depth frame is no longer valid
+    cloud.clear();
 }
 
 void depth_cam::to_depth_frame(void)
@@ -96,14 +88,15 @@ void depth_cam::to_depth_frame(void)
                 rs::float3 depth_point = depth_intrin.deproject(depth_pixel, depth_in_meters);
                 
                 // Convert to opencv vector format first
-                cv::Vec3f depth_point_cv = {depth_point.x, depth_point.y, depth_point.z};
-                cloud->add_point(depth_point_cv);
+                cv::Mat depth_point_cv(1, 3, CV_32FC1, {depth_point.x, depth_point.y, depth_point.z} );
+
+                cloud.add_point(depth_point_cv);
             }
         }
     }
 }
 
-void depth_cam::filter_background( float maxDist, int manhattan )
+void depth_cam::filter_background(float maxDist, int manhattan)
 {
     // Info about the largest index
     int largest_ind = -1;
@@ -239,10 +232,5 @@ depth_cam::~depth_cam( void )
     if (ctx != nullptr)
     {
         delete ctx;
-    }
-
-    if (cloud != nullptr)
-    {
-        delete cloud;
     }
 }
