@@ -58,6 +58,11 @@ int main(int argc, char* argv[])
         cam_top.filter_background(PREFILTER_DEPTH_MAX_DIST, PREFILTER_MANHATTAN_DIST);
         cam_top.to_depth_frame();
 
+        if (curMode == CALIBRATION)
+        {
+            cam_top.cloud.get_transform_from_cloud();
+        }
+        
         cv::imshow(window_name, cam_top.cur_src);
 
         // Break if a key is pressed

@@ -18,6 +18,27 @@ void pointCloud::add_point(cv::Mat point)
     cloud_array.push_back(point);
 }
 
+void pointCloud::get_transform_from_cloud(void)
+{
+    // The X matrix needs a column of ones
+    cv::Mat X_components[] = {
+        cv::Mat::ones(cloud_array.rows, 1, cloud_array.type()),         // just ones
+        cloud_array(cv::Rect(0,0,cloud_array.cols-1,cloud_array.rows)), // x and y columns
+    };
+
+    cv::Mat X, X_trans, beta, y;
+    
+    y = cloud_array(cv::Rect(cloud_array.cols-1,0,1,cloud_array.rows));
+
+    cv::hconcat(X_components, 2, X);
+
+    // Get x'
+    cv::transpose(X, X_trans);
+
+    beta = (X*X_trans).inv()*X_trans;
+    
+}
+
 pointCloud::pointCloud(void)
 {
     cloud_array = cv::Mat(0, 3, CV_32FC1);

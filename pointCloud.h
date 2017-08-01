@@ -21,7 +21,13 @@ class pointCloud
         // Set transform from file
         // Clip
         // Normalize
-        // Get calibration transform from plane
+
+        /**
+         * Gets the calibration transform from the current point-cloud.
+         * Linear least-squares planar regression is used to identify the 
+         * X-Y plane. 
+         */
+        void get_transform_from_cloud(void);
 
         /**
          * Logically clears the pointcloud. Use this in-between frames.
@@ -39,8 +45,10 @@ class pointCloud
         pointCloud(void);
 
     private:
-        int cur_size;                           // The currently-filled portion of the array
-        cv::Mat cloud_array;
+        int cur_size;                   // The currently-filled portion of the array
+        cv::Mat cloud_array;            // The current point cloud
+        cv::Mat calib_rot_transform;    // The rotational transform from the point-cloud
+        cv::Mat calib_transform;        // The homogeneous transform to correct the pointcloud data        
 };
 
 #endif
