@@ -12,7 +12,7 @@
 
 #include "opencv2/core/core.hpp"
 
-class point_cloud
+class pointCloud
 {
     public:
         // Transform Point
@@ -42,7 +42,9 @@ class point_cloud
          *
          * @param   max_size    the maximum buffer size
          */
-        point_cloud (int max_size);
+        pointCloud (int max_size);
+
+        ~pointCloud();
 
     private:
         int max_size;                       // The maximum size of the array

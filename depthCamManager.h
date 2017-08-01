@@ -12,7 +12,7 @@
 
 #include <librealsense/rs.hpp>
 #include "opencv2/core/core.hpp"
-#include "pointcloud.h"
+#include "pointCloud.h"
 
 /**
  * Manages a depth camera over its lifetime. Also provides support for conversion
