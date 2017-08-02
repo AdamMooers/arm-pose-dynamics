@@ -48,7 +48,19 @@ class pointCloud
         int cur_size;                   // The currently-filled portion of the array
         cv::Mat cloud_array;            // The current point cloud
         cv::Mat calib_rot_transform;    // The rotational transform from the point-cloud
-        cv::Mat calib_transform;        // The homogeneous transform to correct the pointcloud data        
+        cv::Mat calib_transform;        // The homogeneous transform to correct the pointcloud data   
+
+        const double line_fitting_reps = 0.01;  // Radius accuracy parameter for line fitting
+        const double line_fitting_aeps = 0.01;  // Angle accuracy parameter for line fitting
+
+        /**
+         * Finds the transform plane using least-squares regression. The
+         * normal is the new z-axis of the system. Uses cloud_array as the
+         * source.
+         *
+         * @return  parameters of z = Ax + By + C as [C A B]
+         */
+        cv::Mat get_normal_from_cloud(void);
 };
 
 #endif
