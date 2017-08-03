@@ -9,16 +9,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "pointCloud.h"
 
-void pointCloud::clear(void)
-{
-    cloud_array.resize(0);   // Nothing in the array now
-}
-
-void pointCloud::add_point(cv::Mat point)
-{
-    cloud_array.push_back(point);
-}
-
 void pointCloud::get_transform_from_cloud(void)
 {
     // Is there enough data to work with?
@@ -30,7 +20,6 @@ void pointCloud::get_transform_from_cloud(void)
     cv::Mat z_vec = get_normal_from_cloud();
     cv::Mat y_vec_props, y_vec; 
     cv::Mat x_vec;
-    cv::Mat calib_origin;
 
     cv::fitLine(cloud_array, y_vec_props, CV_DIST_L2, 0, line_fitting_reps, line_fitting_aeps);
 
@@ -57,10 +46,10 @@ void pointCloud::get_transform_from_cloud(void)
     cv::Mat y_rot(3, 3, CV_32FC1, &y_rot_arr);
 
     // Combine the first two rot. transforms
-    calib_transform = z_rot*y_rot;
+    calib_rot_transform = z_rot*y_rot;
 
     // Rotate axis to determine final rotation
-    cv::Mat z_transformed_yz = z_vec*calib_transform;
+    cv::Mat z_transformed_yz = z_vec*calib_rot_transform;
     float x_rot_theta = -atan2(z_transformed_yz.at<float>(0,1), z_transformed_yz.at<float>(0,2));
 
     float x_rot_arr[3][3] = { {   1,                         0,                         0},
@@ -70,13 +59,46 @@ void pointCloud::get_transform_from_cloud(void)
     cv::Mat x_rot(3, 3, CV_32FC1, &x_rot_arr);
 
     // Combine the x-transform
-    calib_transform = calib_transform*x_rot;  
+    calib_rot_transform = calib_rot_transform*x_rot;  
 
     // Transform the pointcloud
-    cloud_array=cloud_array*calib_transform;
+    cloud_array=cloud_array*calib_rot_transform;
 
     // Find the mean: This works best if the point cloud density is normalized
     cv::reduce(cloud_array, calib_origin, 0, CV_REDUCE_AVG);
+
+    calib_origin = -calib_origin;
+
+    apply_translation(calib_origin, cloud_array);
+}
+
+void pointCloud::clear(void)
+{
+    cloud_array.resize(0);   // Nothing in the array now
+}
+
+void pointCloud::add_point(cv::Mat point)
+{
+    cloud_array.push_back(point);
+}
+
+void pointCloud::save_calibration_matrix(const char* filename)
+{
+    cv::FileStorage transform_file(filename, cv::FileStorage::WRITE);
+    transform_file << "calib_rot_transform" << calib_rot_transform;
+    transform_file << "calib_origin" << calib_origin;
+
+    transform_file.release();
+}
+
+void pointCloud::load_calibration_matrix(const char* filename)
+{
+    cv::FileStorage transform_file(filename, cv::FileStorage::READ);
+
+    transform_file["calib_rot_transform"] >> calib_rot_transform;
+    transform_file["calib_origin"] >> calib_origin;
+
+    transform_file.release();    
 }
 
 cv::Mat pointCloud::get_normal_from_cloud(void)
@@ -114,6 +136,14 @@ cv::Mat pointCloud::get_normal_from_cloud(void)
 pointCloud::pointCloud(void)
 {
     cloud_array = cv::Mat(0, 3, CV_32FC1);
-    calib_rot_transform = cv::Mat(3,3, CV_32FC1);
-    calib_transform = cv::Mat(3,3, CV_32FC1);
+    calib_rot_transform = cv::Mat::eye(3,3, CV_32FC1);
+    calib_origin = cv::Mat::zeros(3, 1, CV_32SC1);
+}
+
+void pointCloud::apply_translation(cv::Mat translation, cv::Mat& matrix)
+{
+    // Move the pointcloud to the new origin
+    for (int r = 0; r < matrix.rows; ++r) {
+        matrix.row(r) = matrix.row(r) + translation;
+    }
 }

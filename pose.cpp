@@ -8,6 +8,7 @@
 
 #define PREFILTER_MANHATTAN_DIST 4
 #define PREFILTER_DEPTH_MAX_DIST 0.05f
+#define CALIBRATION_FILE "calibration.xml"
 
 #include <strings.h>
 #include "depthCamManager.h"
@@ -55,6 +56,11 @@ int main(int argc, char* argv[])
     cv::namedWindow(window_name, CV_WINDOW_NORMAL );
     cv::resizeWindow(window_name, 640, 480);
 
+    if (curMode == TRACKING)
+    {
+        cam_top.cloud.load_calibration_matrix(CALIBRATION_FILE);
+    }
+
     for(;;)
     {
         cam_top.capture_next_frame();
@@ -64,6 +70,8 @@ int main(int argc, char* argv[])
         if (curMode == CALIBRATION)
         {
             cam_top.cloud.get_transform_from_cloud();
+            cam_top.cloud.save_calibration_matrix(CALIBRATION_FILE);
+            exit(0);
         }
         
         cv::imshow(window_name, cam_top.cur_src);
