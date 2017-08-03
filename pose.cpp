@@ -11,8 +11,10 @@
 #define CALIBRATION_FILE "calibration.xml"
 
 #include <strings.h>
+#include <SFML/Window.hpp>
+#include <SFML/OpenGL.hpp>
+#include <SFML/Graphics.hpp>
 #include "depthCamManager.h"
-#include "opencv2/highgui/highgui.hpp"
 
 enum opModes {TRACKING, CALIBRATION};
 
@@ -52,20 +54,25 @@ int main(int argc, char* argv[])
     cam_top.depth_cam_init();    // Connect to the depth camera
     cam_top.start_stream();
 
-    std::string window_name = "depth feed";
-    // Create a window
-    cv::namedWindow(window_name, CV_WINDOW_NORMAL );
-    cv::resizeWindow(window_name, 640, 480);
-
     if (curMode == TRACKING)
     {
         cam_top.cloud.load_calibration_matrix(CALIBRATION_FILE);
     }
 
-    for(;;)
+    // Create a window
+    sf::RenderWindow window(sf::VideoMode(800, 600), "OpenGL", sf::Style::Default, sf::ContextSettings(24));
+    sf::View graphView(sf::FloatRect(-1, -0.75, 2, 1.5));
+    window.setVerticalSyncEnabled(true);
+    window.setActive(true);
+    window.setView(graphView);
+
+    // run the main loop
+    bool running = true;
+    while (running)
     {
         cam_top.capture_next_frame();
         cam_top.filter_background(PREFILTER_DEPTH_MAX_DIST, PREFILTER_MANHATTAN_DIST);
+        cam_top.to_depth_frame();
 
         // Convert to point cloud and apply calibration transform to it
         if (curMode == CALIBRATION)
@@ -74,24 +81,41 @@ int main(int argc, char* argv[])
         }
 
         cam_top.cloud.transform_cloud();
-        cam_top.to_depth_frame();
-        
-        cv::imshow(window_name, cam_top.cur_src);
 
-        // Break if a key is pressed
-        if (cv::waitKey(1) != -1)
+        sf::Event event;
+        while (window.pollEvent(event))
         {
-            break;
+            if (event.type == sf::Event::Closed)
+            {
+                running = false;    // end the program
+            }
         }
+        
+        // Update window view
+        window.clear(sf::Color::Black);
+
+       // sf::VertexArray triangle(sf::Triangles, 3);
+        sf::CircleShape screendot(0.01, 4);
+        screendot.setFillColor(sf::Color(100, 250, 50));
+        screendot.setOrigin(screendot.getRadius(), screendot.getRadius());
+
+        cv::Mat cloud = cam_top.cloud.cloud_array;
+
+        for (int r = 0; r<cloud.rows; r++)
+        {
+            float* curPoint = cloud.ptr<float>(r);
+            screendot.setPosition(curPoint[0], curPoint[1]);
+            window.draw(screendot);
+        }
+        window.display();
     }
 
     // Get transform from cloud
     if (curMode == CALIBRATION)
     {
+        printf("Saving calibration transform to " CALIBRATION_FILE "...\n");
         cam_top.cloud.save_calibration_matrix(CALIBRATION_FILE);
     }
-
-    cv::destroyAllWindows();
 
     return 0;
 }

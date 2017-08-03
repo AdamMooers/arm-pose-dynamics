@@ -76,6 +76,8 @@ class pointCloud
          */
         void prompt_for_manual_offset(void);
 
+        cv::Mat cloud_array;            // The current point cloud
+
         /**
          * Initializes the point cloud. The homogeneous transform matrix equivalent 
          * [calib_rot_transform, calib_origin; 0, 1] is loaded with the identity matrix.
@@ -84,7 +86,6 @@ class pointCloud
 
     private:
         int cur_size;                   // The currently-filled portion of the array
-        cv::Mat cloud_array;            // The current point cloud
         cv::Mat calib_rot_transform;    // The rotational transform from the point-cloud
         cv::Mat calib_origin;           // The translation from the camera to the box center
 

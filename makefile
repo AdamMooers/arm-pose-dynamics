@@ -5,7 +5,7 @@ PNAME = pose
 FLAGS = -Wall
 
 all: pose.o depthCamManager.o pointCloud.o
-	$(COMPILER) pose.o depthCamManager.o pointCloud.o $(FLAGS) `pkg-config --cflags --libs opencv` -lrealsense -o $(PNAME)
+	$(COMPILER) pose.o depthCamManager.o pointCloud.o $(FLAGS) `pkg-config --cflags --libs opencv` -lrealsense -lsfml-graphics -lsfml-window -lsfml-system -o $(PNAME)
 
 pose.o: pose.cpp
 	$(COMPILER) -c pose.cpp
