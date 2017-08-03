@@ -15,7 +15,6 @@
 class pointCloud
 {
     public:
-        // Transform Point
         // Tranform cloud
         // Set transform from file
         // Clip
@@ -61,6 +60,14 @@ class pointCloud
          */
         void load_calibration_matrix(const char* filename);
 
+        /**
+         * Transforms the entire cloud using the current rotation and translation
+         * matrices. point_cloud = point_cloud*R + T. Be sure to load the desired
+         * transform from file (load_calibration_matrix(...)) or from a calibration
+         * cube first.
+         */
+        void transform_cloud(void);
+
         /** 
          * Prompts the user for the manual offset to add to the calibration
          * translation. The result entered by the user is added immediately
@@ -69,6 +76,10 @@ class pointCloud
          */
         void prompt_for_manual_offset(void);
 
+        /**
+         * Initializes the point cloud. The homogeneous transform matrix equivalent 
+         * [calib_rot_transform, calib_origin; 0, 1] is loaded with the identity matrix.
+         */
         pointCloud(void);
 
     private:

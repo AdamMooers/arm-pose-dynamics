@@ -48,6 +48,7 @@ int main(int argc, char* argv[])
     float scale_size = curMode == CALIBRATION?0.2:0.5;
 
     depth_cam cam_top(scale_size);
+
     cam_top.depth_cam_init();    // Connect to the depth camera
     cam_top.start_stream();
 
@@ -66,13 +67,6 @@ int main(int argc, char* argv[])
         cam_top.capture_next_frame();
         cam_top.filter_background(PREFILTER_DEPTH_MAX_DIST, PREFILTER_MANHATTAN_DIST);
         cam_top.to_depth_frame();
-
-        if (curMode == CALIBRATION)
-        {
-            cam_top.cloud.get_transform_from_cloud();
-            cam_top.cloud.save_calibration_matrix(CALIBRATION_FILE);
-            exit(0);
-        }
         
         cv::imshow(window_name, cam_top.cur_src);
 
@@ -81,6 +75,14 @@ int main(int argc, char* argv[])
         {
             break;
         }
+    }
+
+    // Get transform from cloud
+    if (curMode == CALIBRATION)
+    {
+        cam_top.cloud.get_transform_from_cloud();
+        cam_top.cloud.save_calibration_matrix(CALIBRATION_FILE);
+        exit(0);
     }
 
     cv::destroyAllWindows();

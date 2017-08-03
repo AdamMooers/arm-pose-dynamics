@@ -17,6 +17,9 @@ void pointCloud::get_transform_from_cloud(void)
         return;
     }
 
+    // Find the mean: This works best if the point cloud density is normalized
+    cv::reduce(cloud_array, calib_origin, 0, CV_REDUCE_AVG);
+
     cv::Mat z_vec = get_normal_from_cloud();
     cv::Mat y_vec_props, y_vec; 
     cv::Mat x_vec;
@@ -61,15 +64,9 @@ void pointCloud::get_transform_from_cloud(void)
     // Combine the x-transform
     calib_rot_transform = calib_rot_transform*x_rot;  
 
-    // Transform the pointcloud
-    cloud_array=cloud_array*calib_rot_transform;
-
-    // Find the mean: This works best if the point cloud density is normalized
-    cv::reduce(cloud_array, calib_origin, 0, CV_REDUCE_AVG);
-
+    // Transform the offset
+    calib_origin=calib_origin*calib_rot_transform;
     calib_origin = -calib_origin;
-
-    apply_translation(calib_origin, cloud_array);
 }
 
 void pointCloud::clear(void)
@@ -99,6 +96,13 @@ void pointCloud::load_calibration_matrix(const char* filename)
     transform_file["calib_origin"] >> calib_origin;
 
     transform_file.release();    
+}
+
+void pointCloud::transform_cloud(void)
+{
+    // Transform the pointcloud
+    cloud_array=cloud_array*calib_rot_transform;
+    apply_translation(calib_origin, cloud_array);
 }
 
 cv::Mat pointCloud::get_normal_from_cloud(void)
