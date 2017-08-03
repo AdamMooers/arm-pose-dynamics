@@ -29,12 +29,14 @@ class tracker
         /**
          * Uses K-means clustering with the given number of iterations and clusters
          * to determine how the point cloud is connected. kmeans++ is used to set
-         * the initial mean centers. Updates the internal cluster.
+         * the initial mean centers. Updates the internal cluster. The value for k
+         * set in the constructor is used.
          *
-         * @param   k   the number of clusters in the cloud
-         * @param   n   the number of iterations to run k-means on the point-cloud
+         * @param   n           the number of start configuations to run k-means with
+         * @param   max_iter    the maximum number of iterations per start configuration
+         * @param   epsilon     threshold change in precision between iterations
          */
-        void cluster(int k, int n);
+        void cluster(int n, int max_iter, double epsilon);
 
         /**
          * Connects the cluster means to form a mesh for analysis. Updates the internal
@@ -43,10 +45,21 @@ class tracker
          * @param   threshold   the threshold, over which two groups are considered connected
          */
         void connect_means(float threshold);
+
+        /**
+         * Initializes the tracker. Memory is allocated when at this point to improve performance.
+         *
+         * @param   k   the number of clusters used for k-means
+         */
+        tracker(int k);
     
     private:
-        cv::Mat source_cloud;
-        cv::Mat cluster_ind;
+        int k;
+
+        cv::Mat source_cloud;   // A reference to the original transformed pointcloud
+        cv::Mat cluster_ind;    // The clusters for each point in the pointcloud
+        cv::Mat centers;        // Centers of the clusters from k-means
+        cv::Mat adj_kmeans;     // The adjacency matrix describing the connectivity of the means
 };
 
 #endif

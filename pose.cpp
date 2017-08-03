@@ -8,6 +8,10 @@
 
 #define PREFILTER_MANHATTAN_DIST 4
 #define PREFILTER_DEPTH_MAX_DIST 0.05f
+#define KMEANS_K 20
+#define KMEANS_ATTEMPTS 2
+#define KMEANS_ITERATIONS 20
+#define KMEANS_EPSILON 0.2
 #define CALIBRATION_FILE "calibration.xml"
 
 #include <strings.h>
@@ -51,7 +55,7 @@ int main(int argc, char* argv[])
     float scale_size = curMode == CALIBRATION?0.2:0.2;
 
     depth_cam cam_top(scale_size);
-    tracker tracker_top();
+    tracker tracker_top(KMEANS_K);
 
     cam_top.depth_cam_init();    // Connect to the depth camera
     cam_top.start_stream();
@@ -83,6 +87,8 @@ int main(int argc, char* argv[])
         }
 
         cam_top.cloud.transform_cloud();
+
+        tracker_top.update_point_cloud(cam_top.cloud);
 
         sf::Event event;
         while (window.pollEvent(event))
