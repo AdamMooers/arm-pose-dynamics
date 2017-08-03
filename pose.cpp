@@ -66,6 +66,14 @@ int main(int argc, char* argv[])
     {
         cam_top.capture_next_frame();
         cam_top.filter_background(PREFILTER_DEPTH_MAX_DIST, PREFILTER_MANHATTAN_DIST);
+
+        // Convert to point cloud and apply calibration transform to it
+        if (curMode == CALIBRATION)
+        {
+            cam_top.cloud.get_transform_from_cloud();
+        }
+
+        cam_top.cloud.transform_cloud();
         cam_top.to_depth_frame();
         
         cv::imshow(window_name, cam_top.cur_src);
@@ -80,9 +88,7 @@ int main(int argc, char* argv[])
     // Get transform from cloud
     if (curMode == CALIBRATION)
     {
-        cam_top.cloud.get_transform_from_cloud();
         cam_top.cloud.save_calibration_matrix(CALIBRATION_FILE);
-        exit(0);
     }
 
     cv::destroyAllWindows();

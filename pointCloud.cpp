@@ -141,7 +141,7 @@ pointCloud::pointCloud(void)
 {
     cloud_array = cv::Mat(0, 3, CV_32FC1);
     calib_rot_transform = cv::Mat::eye(3,3, CV_32FC1);
-    calib_origin = cv::Mat::zeros(3, 1, CV_32SC1);
+    calib_origin = cv::Mat::zeros(1, 3, CV_32FC1);
 }
 
 void pointCloud::apply_translation(cv::Mat translation, cv::Mat& matrix)
