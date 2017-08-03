@@ -94,8 +94,7 @@ int main(int argc, char* argv[])
         // Update window view
         window.clear(sf::Color::Black);
 
-       // sf::VertexArray triangle(sf::Triangles, 3);
-        sf::CircleShape screendot(0.01, 4);
+        sf::CircleShape screendot(0.005, 3);
         screendot.setFillColor(sf::Color(100, 250, 50));
         screendot.setOrigin(screendot.getRadius(), screendot.getRadius());
 
@@ -104,15 +103,26 @@ int main(int argc, char* argv[])
         for (int r = 0; r<cloud.rows; r++)
         {
             float* curPoint = cloud.ptr<float>(r);
-            screendot.setPosition(curPoint[0], curPoint[1]);
+
+            if (curMode == CALIBRATION)
+            {
+                screendot.setPosition(curPoint[0], curPoint[1]);    // Render x->x, y->y
+            }
+            else
+            {
+                screendot.setPosition(curPoint[0], -curPoint[2]);    // Render x->x, -z->y
+            }
             window.draw(screendot);
         }
         window.display();
     }
 
+    window.close();
+
     // Get transform from cloud
     if (curMode == CALIBRATION)
     {
+        cam_top.cloud.prompt_for_manual_offset();
         printf("Saving calibration transform to " CALIBRATION_FILE "...\n");
         cam_top.cloud.save_calibration_matrix(CALIBRATION_FILE);
     }

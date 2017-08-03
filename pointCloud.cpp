@@ -137,6 +137,26 @@ cv::Mat pointCloud::get_normal_from_cloud(void)
     return normal_z;
 }
 
+void pointCloud::prompt_for_manual_offset(void)
+{
+    float offset_arr[3];
+    int num_matched = 0;
+
+    printf("Enter manual offset x,y,z:");
+    num_matched = scanf(" %f , %f , %f", &offset_arr[0], &offset_arr[1], &offset_arr[2]);
+
+    if (num_matched != 3)
+    {
+        printf("Unable to parse input. No manual transform will be applied.");
+    }
+
+    // Convert to matrix format
+    cv::Mat offset(1, 3, CV_32FC1, &offset_arr);
+
+    // Subtract offset
+    calib_origin = calib_origin - offset;
+}
+
 pointCloud::pointCloud(void)
 {
     cloud_array = cv::Mat(0, 3, CV_32FC1);
