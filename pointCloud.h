@@ -15,8 +15,6 @@
 class pointCloud
 {
     public:
-        // Tranform cloud
-        // Set transform from file
         // Clip
         // Normalize
 

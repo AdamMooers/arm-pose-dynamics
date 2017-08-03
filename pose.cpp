@@ -15,6 +15,7 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
 #include "depthCamManager.h"
+#include "tracker.h"
 
 enum opModes {TRACKING, CALIBRATION};
 
@@ -47,9 +48,10 @@ int main(int argc, char* argv[])
 {
     parse_input(argc, argv);
 
-    float scale_size = curMode == CALIBRATION?0.2:0.5;
+    float scale_size = curMode == CALIBRATION?0.2:0.2;
 
     depth_cam cam_top(scale_size);
+    tracker tracker_top();
 
     cam_top.depth_cam_init();    // Connect to the depth camera
     cam_top.start_stream();
@@ -61,7 +63,7 @@ int main(int argc, char* argv[])
 
     // Create a window
     sf::RenderWindow window(sf::VideoMode(800, 600), "OpenGL", sf::Style::Default, sf::ContextSettings(24));
-    sf::View graphView(sf::FloatRect(-1, -0.75, 2, 1.5));
+    sf::View graphView(sf::FloatRect(-0.5, -0.75, 1, 0.75));
     window.setVerticalSyncEnabled(true);
     window.setActive(true);
     window.setView(graphView);
