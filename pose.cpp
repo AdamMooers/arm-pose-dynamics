@@ -88,7 +88,9 @@ int main(int argc, char* argv[])
 
         cam_top.cloud.transform_cloud();
 
+        // Run clustering algorithm
         tracker_top.update_point_cloud(cam_top.cloud);
+        tracker_top.cluster(KMEANS_ATTEMPTS, KMEANS_ITERATIONS, KMEANS_EPSILON);
 
         sf::Event event;
         while (window.pollEvent(event))

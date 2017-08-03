@@ -35,8 +35,9 @@ class tracker
          * @param   n           the number of start configuations to run k-means with
          * @param   max_iter    the maximum number of iterations per start configuration
          * @param   epsilon     threshold change in precision between iterations
+         * @return  whether or not kmeans was able to run (was the point cloud size > k?)
          */
-        void cluster(int n, int max_iter, double epsilon);
+        bool cluster(int n, int max_iter, double epsilon);
 
         /**
          * Connects the cluster means to form a mesh for analysis. Updates the internal
