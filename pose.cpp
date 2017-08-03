@@ -88,9 +88,12 @@ int main(int argc, char* argv[])
 
         cam_top.cloud.transform_cloud();
 
-        // Run clustering algorithm
-        tracker_top.update_point_cloud(cam_top.cloud);
-        tracker_top.cluster(KMEANS_ATTEMPTS, KMEANS_ITERATIONS, KMEANS_EPSILON);
+        if (curMode == TRACKING)
+        {
+            // Run clustering algorithm
+            tracker_top.update_point_cloud(cam_top.cloud);
+            tracker_top.cluster(KMEANS_ATTEMPTS, KMEANS_ITERATIONS, KMEANS_EPSILON);
+        }
 
         sf::Event event;
         while (window.pollEvent(event))
@@ -124,6 +127,18 @@ int main(int argc, char* argv[])
             }
             window.draw(screendot);
         }
+
+        // Render in screen space
+        screendot.setRadius(0.01);
+        screendot.setFillColor(sf::Color(200, 0, 0));
+        cloud = tracker_top.centers;
+        for (int r = 0; r<cloud.rows; r++)
+        {
+            float* curPoint = cloud.ptr<float>(r);
+            screendot.setPosition(curPoint[0], -curPoint[2]);    // Render x->x, -z->y
+            window.draw(screendot);
+        }
+
         window.display();
     }
 
