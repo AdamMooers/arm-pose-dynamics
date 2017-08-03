@@ -11,7 +11,7 @@
 #define KMEANS_K 20
 #define KMEANS_ATTEMPTS 2
 #define KMEANS_ITERATIONS 20
-#define KMEANS_EPSILON 0.2
+#define KMEANS_EPSILON 0.01
 #define CALIBRATION_FILE "calibration.xml"
 
 #include <strings.h>

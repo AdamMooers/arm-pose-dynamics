@@ -26,8 +26,16 @@ bool tracker::cluster(int n, int max_iter, double epsilon)
         return false;
     }
 
+    int flags = cv::KMEANS_PP_CENTERS;  // Use kmeans++ heuristic
+    
+    if (cluster_ind.rows == 0)
+    {
+        printf("Triggered\n");
+        flags += cv::KMEANS_USE_INITIAL_LABELS;
+    }
+
     // Calculate k-means
-    cv::kmeans(source_cloud, k, cluster_ind, crit, n, cv::KMEANS_PP_CENTERS, centers);
+    cv::kmeans(source_cloud, k, cluster_ind, crit, n, flags, centers);
     return true;
 }
 
