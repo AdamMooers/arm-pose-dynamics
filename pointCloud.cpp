@@ -40,15 +40,55 @@ void pointCloud::get_transform_from_cloud(void)
     // Calculate the x-axis
     x_vec = z_vec.cross(y_vec);
 
-    float z_rot_theta = 
+    // Rotate the pointcloud about this point
+    float z_rot_theta = atan2(x_vec.at<float>(0,1), x_vec.at<float>(0,0));
+    float y_rot_theta = -atan2(x_vec.at<float>(0,2), cv::norm(x_vec(cv::Rect(0,0,2,1))));
+
+    // Calculate the first two rotational transforms
+    float z_rot_arr[3][3] = { {   (float)cos(z_rot_theta),   (float)-sin(z_rot_theta),  0},
+                              {   (float)sin(z_rot_theta),   (float)cos(z_rot_theta),   0},
+                              {   0,                         0,                         1}};
+
+    float y_rot_arr[3][3] = { {   (float)cos(y_rot_theta),   0,   (float)sin(y_rot_theta)},
+                              {   0,                         1,                         0},
+                              {   (float)-sin(y_rot_theta),  0,   (float)cos(y_rot_theta)}}; 
+
+    cv::Mat z_rot(3, 3, CV_32FC1, &z_rot_arr);
+    cv::Mat y_rot(3, 3, CV_32FC1, &y_rot_arr);
+
+    // Combine the first two rot. transforms
+    calib_transform = z_rot*y_rot;
+
+    // Rotate axis to determine final rotation
+    cv::Mat z_transformed_yz = z_vec*calib_transform;
+    float x_rot_theta = -atan2(z_transformed_yz.at<float>(0,1), z_transformed_yz.at<float>(0,2));
+
+    float x_rot_arr[3][3] = { {   1,                         0,                         0},
+                              {   0,   (float)cos(x_rot_theta),  (float)-sin(x_rot_theta)},
+                              {   0,   (float)sin(x_rot_theta),  (float)cos(x_rot_theta) }};
+
+    cv::Mat x_rot(3, 3, CV_32FC1, &x_rot_arr);
+
+    // Combine the x-transform
+    calib_transform = calib_transform*x_rot;  
+
+    // Transform the pointcloud
+    cloud_array=cloud_array*calib_transform;
+
+    //std::cout << "y_vec= " << y_vec << "\n";
+
+    x_vec = x_vec*calib_transform;
+    y_vec = y_vec*calib_transform;
+    z_vec = z_vec*calib_transform;
+
 
     // Find the mean: This works best if the point cloud density is normalized
     cv::reduce(cloud_array, calib_origin, 0, CV_REDUCE_AVG);
 
-    std::cout << "cloud_array= " << cloud_array << "\n";
-    std::cout << "y_vec= " << y_vec << "\n";
-    std::cout << "z_vec= " << z_vec << "\n";
-    exit(0);
+    //std::cout << "cloud_array= " << cloud_array << "\n";
+    std::cout << "x_vec= " << x_vec << "\n\n";
+    std::cout << "y_vec= " << y_vec << "\n\n";
+    std::cout << "z_vec= " << z_vec << "\n\n";
 }
 
 cv::Mat pointCloud::get_normal_from_cloud(void)
@@ -72,15 +112,20 @@ cv::Mat pointCloud::get_normal_from_cloud(void)
     beta = (X_trans*X).inv()*(X_trans*y);
 
     // Extract the normal
-    float normal_arr[] = {beta.at<float>(0,1), beta.at<float>(0,2), -1.0f};
+    float normal_arr_z[] = {beta.at<float>(0,1), beta.at<float>(0,2), -1.0f};
 
     // Convert the normal to cv::mat format
-    cv::Mat normal(1, 3, CV_32FC1, &normal_arr);
+    cv::Mat normal_z_src(1, 3, CV_32FC1, &normal_arr_z);
+    cv::Mat normal_z; 
+
+    normal_z_src.copyTo(normal_z);
     
-    return normal_arr;
+    return normal_z;
 }
 
 pointCloud::pointCloud(void)
 {
     cloud_array = cv::Mat(0, 3, CV_32FC1);
+    calib_rot_transform = cv::Mat(3,3, CV_32FC1);
+    calib_transform = cv::Mat(3,3, CV_32FC1);
 }
