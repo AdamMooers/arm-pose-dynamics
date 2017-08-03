@@ -75,20 +75,8 @@ void pointCloud::get_transform_from_cloud(void)
     // Transform the pointcloud
     cloud_array=cloud_array*calib_transform;
 
-    //std::cout << "y_vec= " << y_vec << "\n";
-
-    x_vec = x_vec*calib_transform;
-    y_vec = y_vec*calib_transform;
-    z_vec = z_vec*calib_transform;
-
-
     // Find the mean: This works best if the point cloud density is normalized
     cv::reduce(cloud_array, calib_origin, 0, CV_REDUCE_AVG);
-
-    //std::cout << "cloud_array= " << cloud_array << "\n";
-    std::cout << "x_vec= " << x_vec << "\n\n";
-    std::cout << "y_vec= " << y_vec << "\n\n";
-    std::cout << "z_vec= " << z_vec << "\n\n";
 }
 
 cv::Mat pointCloud::get_normal_from_cloud(void)
