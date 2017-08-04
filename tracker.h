@@ -56,12 +56,11 @@ class tracker
 
         cv::Mat cluster_ind;    // The clusters for each point in the pointcloud
         cv::Mat centers;        // Centers of the clusters from k-means
-    
-    private:
-        int k;
-
-        cv::Mat source_cloud;   // A reference to the original transformed pointcloud
         cv::Mat adj_kmeans;     // The adjacency matrix describing the connectivity of the means
+
+    private:
+        int k;                  // Number of clusters in the simulation
+        cv::Mat source_cloud;   // A reference to the original transformed pointcloud
 };
 
 #endif

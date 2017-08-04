@@ -12,6 +12,7 @@
 #define KMEANS_ATTEMPTS 2
 #define KMEANS_ITERATIONS 20
 #define KMEANS_EPSILON 0.01
+#define KMEANS_CONNECT_THRESHOLD 40
 #define CALIBRATION_FILE "calibration.xml"
 
 #include <strings.h>
@@ -46,6 +47,33 @@ void parse_input(int argc, char* argv[])
         printf("Entering tracking mode...\n");
         curMode = TRACKING;
     }
+}
+
+/**
+ * Draws the given pointcloud to the specified window.
+ */
+
+void draw_pointcloud(sf::RenderWindow& window, cv::Mat cloud)
+{
+    sf::VertexArray vertices(sf::Points, cloud.rows);
+
+    for (int r = 0; r<cloud.rows; r++)
+    {
+        float* curPoint = cloud.ptr<float>(r);
+
+        vertices[r].color = sf::Color(0, (256-(int)(curPoint[1]*512))%256, 0);
+
+        if (curMode == CALIBRATION)
+        {
+            vertices[r].position = sf::Vector2f(curPoint[0], curPoint[1]);    // Render x->x, y->y
+        }
+        else
+        {
+            vertices[r].position = sf::Vector2f(curPoint[0], -curPoint[2]);    // Render x->x, -z->y
+        }
+    }
+
+    window.draw(vertices);
 }
 
 int main(int argc, char* argv[])
@@ -93,6 +121,7 @@ int main(int argc, char* argv[])
             // Run clustering algorithm
             tracker_top.update_point_cloud(cam_top.cloud);
             tracker_top.cluster(KMEANS_ATTEMPTS, KMEANS_ITERATIONS, KMEANS_EPSILON);
+            tracker_top.connect_means(KMEANS_CONNECT_THRESHOLD);
         }
 
         sf::Event event;
@@ -107,29 +136,10 @@ int main(int argc, char* argv[])
         // Update window view
         window.clear(sf::Color::Black);
 
-        sf::CircleShape screendot(0.005, 3);
-        screendot.setFillColor(sf::Color(100, 250, 50));
-        screendot.setOrigin(screendot.getRadius(), screendot.getRadius());
-
-        cv::Mat cloud = cam_top.cloud.cloud_array;
-
-        for (int r = 0; r<cloud.rows; r++)
-        {
-            float* curPoint = cloud.ptr<float>(r);
-
-            if (curMode == CALIBRATION)
-            {
-                screendot.setPosition(curPoint[0], curPoint[1]);    // Render x->x, y->y
-            }
-            else
-            {
-                screendot.setPosition(curPoint[0], -curPoint[2]);    // Render x->x, -z->y
-            }
-            window.draw(screendot);
-        }
+        draw_pointcloud(window, cam_top.cloud.cloud_array);
 
         // Render in screen space
-        screendot.setRadius(0.01);
+        /*screendot.setRadius(0.01);
         screendot.setFillColor(sf::Color(200, 0, 0));
         cloud = tracker_top.centers;
         for (int r = 0; r<cloud.rows; r++)
@@ -137,7 +147,20 @@ int main(int argc, char* argv[])
             float* curPoint = cloud.ptr<float>(r);
             screendot.setPosition(curPoint[0], -curPoint[2]);    // Render x->x, -z->y
             window.draw(screendot);
-        }
+
+            for (int c = r; c<adj_kmeans.rows; c++)
+            {
+                if (adj_kmeans.at<float>(c,0) < 0.5f)
+                {
+                    float* connectedTo = cloud.ptr<float>(c);
+
+                }
+                
+                adj_kmeans++;
+            }
+
+            adj_kmeans
+        }*/
 
         window.display();
     }
