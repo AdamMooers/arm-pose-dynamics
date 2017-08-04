@@ -9,10 +9,10 @@
 #define PREFILTER_MANHATTAN_DIST 4
 #define PREFILTER_DEPTH_MAX_DIST 0.05f
 #define KMEANS_K 30
-#define KMEANS_ATTEMPTS 5
+#define KMEANS_ATTEMPTS 1
 #define KMEANS_ITERATIONS 20
-#define KMEANS_EPSILON 0.01
-#define KMEANS_CONNECT_THRESHOLD 1
+#define KMEANS_EPSILON 0.002
+#define KMEANS_CONNECT_THRESHOLD 0.4
 #define CALIBRATION_FILE "calibration.xml"
 
 #include <iostream>
@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 {
     parse_input(argc, argv);
 
-    float scale_size = curMode == CALIBRATION?0.2:0.1;
+    float scale_size = curMode == CALIBRATION?0.2:0.15;
 
     depth_cam cam_top(scale_size);
     tracker tracker_top(KMEANS_K);

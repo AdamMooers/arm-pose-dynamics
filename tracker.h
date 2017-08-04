@@ -45,7 +45,7 @@ class tracker
          *
          * @param   threshold   the threshold, over which two groups are considered connected
          */
-        void connect_means(float threshold);
+        void connect_means(float threshold);       
 
         /**
          * Initializes the tracker. Memory is allocated when at this point to improve performance.
@@ -61,6 +61,37 @@ class tracker
     private:
         int k;                  // Number of clusters in the simulation
         cv::Mat source_cloud;   // A reference to the original transformed pointcloud
+};
+
+class arm
+{
+    public:
+        // Contains the kmeans indices in the arm mesh from hand (at the front)
+        // to shoulder (at the back)        
+        std::list<int> kmean_ind;
+        int elbow_kmean_ind;
+
+        /**
+         * Calculates the shoulder location from the given hand location. The kmeans
+         * center closest to the start position (but with a greater z) is taken as the 
+         * start node. The algorithm then progresses up the graph until the change in
+         * x is greater than a threshold or if no more "up" options remain. The next
+         * selected point is the furthest neighbor from the global mean that is in the
+         * positive direction.
+         *
+         * @param   source              the tracker to use for data
+         * @param   start_pos           the approximate location of the hand (1x3)
+         * @param   max_dist_to_start   the maximum distance to the start position the start node can be
+         * @param   dx_threshold        the threshold in dx to terminate the algorithm
+         * @return  whether or not the arm was identified correctly (was dx_threshold the terminating condition?)
+         */
+        bool update_arm_list(cv::Mat start_pos, float max_dist_to_start, float dx_threshold);
+
+        /**
+         * Identifies the elbow by finding the point in kmean_ind which has
+         * minimum in difference between the shoulder and the hand.
+         */
+        bool update_elbow(void);
 };
 
 #endif
