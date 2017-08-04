@@ -8,17 +8,20 @@
 
 #define PREFILTER_MANHATTAN_DIST 4
 #define PREFILTER_DEPTH_MAX_DIST 0.05f
-#define KMEANS_K 20
-#define KMEANS_ATTEMPTS 2
+#define KMEANS_K 30
+#define KMEANS_ATTEMPTS 5
 #define KMEANS_ITERATIONS 20
 #define KMEANS_EPSILON 0.01
-#define KMEANS_CONNECT_THRESHOLD 40
+#define KMEANS_CONNECT_THRESHOLD 1
 #define CALIBRATION_FILE "calibration.xml"
 
+#include <iostream>
 #include <strings.h>
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/OpenGL.hpp>
+#include <GL/glu.h>
 #include "depthCamManager.h"
 #include "tracker.h"
 
@@ -53,34 +56,81 @@ void parse_input(int argc, char* argv[])
  * Draws the given pointcloud to the specified window.
  */
 
-void draw_pointcloud(sf::RenderWindow& window, cv::Mat cloud)
+void draw_pointcloud(cv::Mat cloud)
 {
-    sf::VertexArray vertices(sf::Points, cloud.rows);
+    glPointSize(2);
+    glBegin(GL_POINTS);
 
     for (int r = 0; r<cloud.rows; r++)
     {
         float* curPoint = cloud.ptr<float>(r);
 
-        vertices[r].color = sf::Color(0, (256-(int)(curPoint[1]*512))%256, 0);
+        glColor3ub(0, (256-(int)(curPoint[1]*512))%256, 0);
 
         if (curMode == CALIBRATION)
         {
-            vertices[r].position = sf::Vector2f(curPoint[0], curPoint[1]);    // Render x->x, y->y
+            glVertex3f(curPoint[0], curPoint[1], 0);    // Render x->x, y->y
         }
         else
         {
-            vertices[r].position = sf::Vector2f(curPoint[0], -curPoint[2]);    // Render x->x, -z->y
+            glVertex3f(curPoint[0], -curPoint[2], 0);   // Render x->x, -z->y
         }
     }
 
-    window.draw(vertices);
+    glEnd();
+}
+
+/**
+ * Draws the given adjacency matrix with the corresponding kmeans centers.
+ */
+
+void draw_kmeans_mesh(cv::Mat centers, cv::Mat adj)
+{
+    if (centers.rows != KMEANS_K)
+    {
+        return;
+    }
+
+    glPointSize(6);
+
+    // Draw cloud centers
+    glBegin(GL_POINTS);
+
+        for (int r = 0; r<centers.rows; r+=1)
+        {
+            float* curPoint = centers.ptr<float>(r/1);
+
+            glColor3ub(255, 0, 0);
+            glVertex3f(curPoint[0], -curPoint[2], 0); 
+        }
+
+    glEnd();
+
+    glBegin(GL_LINES);
+
+        for (int r = 0; r<centers.rows; r+=1)
+        {
+            float* curPoint = centers.ptr<float>(r);
+
+            for (int c = r; c<adj.cols; c++)
+            {
+                if (adj.at<float>(r,c) > 0.5f)
+                {
+                    float* connectedTo = centers.ptr<float>(c);
+                    glColor3ub(255, 0, 0);
+                    glVertex3f(curPoint[0], -curPoint[2], 0);
+                    glVertex3f(connectedTo[0], -connectedTo[2], 0);
+                }
+            }
+        }
+    glEnd();
 }
 
 int main(int argc, char* argv[])
 {
     parse_input(argc, argv);
 
-    float scale_size = curMode == CALIBRATION?0.2:0.2;
+    float scale_size = curMode == CALIBRATION?0.2:0.1;
 
     depth_cam cam_top(scale_size);
     tracker tracker_top(KMEANS_K);
@@ -100,10 +150,24 @@ int main(int argc, char* argv[])
     window.setActive(true);
     window.setView(graphView);
 
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    // Match coordinates between SFML view with the orthographic view
+    sf::Vector2f viewSize = window.getView().getSize();
+    sf::Vector2f viewCenter = window.getView().getCenter();
+    gluOrtho2D( viewCenter.x-viewSize.x/2,
+                viewCenter.x+viewSize.x/2,
+                viewCenter.y+viewSize.y/2,
+                viewCenter.y-viewSize.y/2);
+
     // run the main loop
     bool running = true;
     while (running)
     {
+        // Update window view
+        window.clear(sf::Color::Black);
+
         cam_top.capture_next_frame();
         cam_top.filter_background(PREFILTER_DEPTH_MAX_DIST, PREFILTER_MANHATTAN_DIST);
         cam_top.to_depth_frame();
@@ -120,8 +184,13 @@ int main(int argc, char* argv[])
         {
             // Run clustering algorithm
             tracker_top.update_point_cloud(cam_top.cloud);
-            tracker_top.cluster(KMEANS_ATTEMPTS, KMEANS_ITERATIONS, KMEANS_EPSILON);
-            tracker_top.connect_means(KMEANS_CONNECT_THRESHOLD);
+            bool couldCluster = tracker_top.cluster(KMEANS_ATTEMPTS, KMEANS_ITERATIONS, KMEANS_EPSILON);
+
+            if (couldCluster)
+            {
+                tracker_top.connect_means(KMEANS_CONNECT_THRESHOLD);
+                draw_kmeans_mesh(tracker_top.centers, tracker_top.adj_kmeans);
+            }
         }
 
         sf::Event event;
@@ -133,34 +202,7 @@ int main(int argc, char* argv[])
             }
         }
         
-        // Update window view
-        window.clear(sf::Color::Black);
-
-        draw_pointcloud(window, cam_top.cloud.cloud_array);
-
-        // Render in screen space
-        /*screendot.setRadius(0.01);
-        screendot.setFillColor(sf::Color(200, 0, 0));
-        cloud = tracker_top.centers;
-        for (int r = 0; r<cloud.rows; r++)
-        {
-            float* curPoint = cloud.ptr<float>(r);
-            screendot.setPosition(curPoint[0], -curPoint[2]);    // Render x->x, -z->y
-            window.draw(screendot);
-
-            for (int c = r; c<adj_kmeans.rows; c++)
-            {
-                if (adj_kmeans.at<float>(c,0) < 0.5f)
-                {
-                    float* connectedTo = cloud.ptr<float>(c);
-
-                }
-                
-                adj_kmeans++;
-            }
-
-            adj_kmeans
-        }*/
+        draw_pointcloud(cam_top.cloud.cloud_array);
 
         window.display();
     }
