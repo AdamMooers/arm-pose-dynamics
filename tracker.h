@@ -13,6 +13,7 @@
 
 #include "opencv2/core/core.hpp"
 #include "pointCloud.h"
+#include <list>
 
 
 class tracker
@@ -70,6 +71,8 @@ class arm
         // to shoulder (at the back)        
         std::list<int> kmean_ind;
         int elbow_kmean_ind;
+        tracker* source;
+        cv::Mat start_pos;
 
         /**
          * Calculates the shoulder location from the given hand location. The kmeans
@@ -78,20 +81,35 @@ class arm
          * x is greater than a threshold or if no more "up" options remain. The next
          * selected point is the furthest neighbor from the global mean that is in the
          * positive direction.
-         *
-         * @param   source              the tracker to use for data
-         * @param   start_pos           the approximate location of the hand (1x3)
+         * 
          * @param   max_dist_to_start   the maximum distance to the start position the start node can be
          * @param   dx_threshold        the threshold in dx to terminate the algorithm
          * @return  whether or not the arm was identified correctly (was dx_threshold the terminating condition?)
          */
-        bool update_arm_list(cv::Mat start_pos, float max_dist_to_start, float dx_threshold);
+        bool update_arm_list(float max_dist_to_start, float dx_threshold);
 
         /**
          * Identifies the elbow by finding the point in kmean_ind which has
          * minimum in difference between the shoulder and the hand.
          */
         bool update_elbow(void);
+
+        /**
+         * @param   source              the tracker to use for data
+         * @param   start_pos           the approximate location of the hand (1x3)
+         */
+        arm(tracker& source, cv::Mat start_pos);
+    
+    private:
+        /**
+         * Identifies the point closest to the given start position whose
+         * z value is greater than the start position z value. The source
+         * centers are searched.
+         *
+         * @param   start_pos   find the point to compare the source against
+         * @return  the index of the source center point. -1 if no points met the conditions
+         */
+        int find_closest_center_hand();
 };
 
 #endif

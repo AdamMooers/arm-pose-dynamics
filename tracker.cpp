@@ -102,7 +102,43 @@ void tracker::connect_means(float threshold)
 tracker::tracker(int k)
 {
     tracker::k = k;
-    cluster_ind = cv::Mat(0, 1, CV_32SC1);	// Is float correct?????????
+    cluster_ind = cv::Mat(0, 1, CV_32SC1);
     adj_kmeans = cv::Mat(k, k, CV_32FC1);
     centers = cv::Mat(k, 3, CV_32FC1);
+}
+
+bool arm::update_arm_list(float max_dist_to_start, float dx_threshold)
+{
+	kmean_ind.clear();
+
+}
+
+int arm::find_closest_center_hand()
+{
+	int closest_ind = -1;
+	float closest_dist = FLT_MAX;
+
+	// For each row in the kmeans
+	for (int r_c=0; r_c<source->centers.rows; r_c++)
+	{
+		// Make sure the new point has a greater Z
+		if (start_pos.at<float>(0,2) <= source->centers.at<float>(0,2))
+		{
+			float deltaDist = cv::norm(source->centers.row(r_c), start_pos);
+
+			if (deltaDist < closest_dist)
+			{
+				closest_ind = r_c;
+				closest_dist = deltaDist;
+			}
+		}
+	}
+
+	return closest_ind;
+}
+
+arm::arm(tracker& source, cv::Mat start_pos)
+{
+	arm::start_pos = start_pos;
+	arm::source = &source;
 }

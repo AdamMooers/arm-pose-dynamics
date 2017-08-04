@@ -6,6 +6,8 @@
  * the result in realtime.
  */
 
+#define POINT_CLOUD_SCALING_CALIB 0.2
+#define POINT_CLOUD_SCALING_TRACKING 0.15
 #define PREFILTER_MANHATTAN_DIST 4
 #define PREFILTER_DEPTH_MAX_DIST 0.05f
 #define KMEANS_K 30
@@ -130,7 +132,9 @@ int main(int argc, char* argv[])
 {
     parse_input(argc, argv);
 
-    float scale_size = curMode == CALIBRATION?0.2:0.15;
+    float scale_size = (curMode == CALIBRATION) ?
+                        POINT_CLOUD_SCALING_CALIB:
+                        POINT_CLOUD_SCALING_TRACKING;
 
     depth_cam cam_top(scale_size);
     tracker tracker_top(KMEANS_K);
