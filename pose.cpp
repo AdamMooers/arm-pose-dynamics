@@ -137,7 +137,7 @@ void draw_kmeans_mesh(cv::Mat centers, cv::Mat adj)
  */
 void draw_arm(arm& to_draw)
 {
-    glPointSize(20);
+    glPointSize(15);
     glBegin(GL_POINTS);
     
         for (std::list<int>::const_iterator ci = to_draw.kmean_ind.begin(); 
@@ -146,7 +146,18 @@ void draw_arm(arm& to_draw)
 
             float* curPoint = to_draw.source->centers.ptr<float>(*ci);
 
-            glColor3ub(0, 0, 255);
+            // Highlight special points
+            if (*ci == to_draw.elbow_approx_ind || 
+                *ci == to_draw.kmean_ind.back() ||
+                *ci == to_draw.kmean_ind.front())
+            {
+                glColor3ub(0, 0, 255);
+            }
+            else
+            {
+                glColor3ub(0, 64, 64);
+            }
+
             glVertex3f(curPoint[0], -curPoint[2], 0);   // Render x->x, -z->y
            // glVertex3f(0.2, 0, 0.2); 
         }
@@ -224,10 +235,17 @@ int main(int argc, char* argv[])
             {
                 tracker_top.connect_means(KMEANS_CONNECT_THRESHOLD);
                 draw_kmeans_mesh(tracker_top.centers, tracker_top.adj_kmeans);
-                left_arm.update_arm_list(SHOULDER_DXDZ_THRESHOLD);
-                right_arm.update_arm_list(SHOULDER_DXDZ_THRESHOLD);
-                draw_arm(left_arm);
-                draw_arm(right_arm);
+                if (left_arm.update_arm_list(SHOULDER_DXDZ_THRESHOLD))
+                {
+                    left_arm.update_elbow_approx();
+                    draw_arm(left_arm);
+                }
+
+                if (right_arm.update_arm_list(SHOULDER_DXDZ_THRESHOLD))
+                {
+                    right_arm.update_elbow_approx();
+                    draw_arm(right_arm);
+                }
             }
         }
 

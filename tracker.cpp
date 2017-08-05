@@ -172,9 +172,30 @@ bool arm::update_arm_list(float dxdz_threshold)
 		// Push to list
 		kmean_ind.push_back(cur_ind);
 	}
+
+	return kmean_ind.size()>=3?true:false;	// Atleast 3 joints needed to form arm
 }
 
-int arm::find_closest_center_hand()
+void arm::update_elbow_approx(void)
+{
+	elbow_approx_ind = -1;
+	float dist_mult_max = 0;
+
+	for (std::list<int>::const_iterator ci = kmean_ind.begin(); ci != kmean_ind.end(); ++ci)
+    {
+		float dist_mult = 1;
+		dist_mult *= cv::norm(source->centers.row(*ci), source->centers.row(kmean_ind.front()));
+		dist_mult *= cv::norm(source->centers.row(*ci), source->centers.row(kmean_ind.back()));
+
+		if (dist_mult > dist_mult_max)
+		{
+			dist_mult_max = dist_mult;
+			elbow_approx_ind = *ci;
+		}
+	}
+}
+
+int arm::find_closest_center_hand(void)
 {
 	int closest_ind = -1;
 	float closest_dist = FLT_MAX;

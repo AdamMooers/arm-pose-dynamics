@@ -72,6 +72,7 @@ class arm
         int elbow_kmean_ind;
         tracker* source;
         cv::Mat start_pos;
+        int elbow_approx_ind;   // The point in the point cloud closest to the elbow
 
         /**
          * Calculates the shoulder location from the given hand location. The kmeans
@@ -87,10 +88,10 @@ class arm
         bool update_arm_list(float dxdz_threshold);
 
         /**
-         * Identifies the elbow by finding the point in kmean_ind which has
-         * minimum in difference between the shoulder and the hand.
+         * Identifies the elbow by finding the point in kmean_ind which maximizes
+         * the multiplied distances from itself to the hand and the shoulder.
          */
-        bool update_elbow(void);
+        void update_elbow_approx(void);
 
         /**
          * @param   source              the tracker to use for data
