@@ -111,6 +111,11 @@ class arm
         bool update_joints(float smoothing_factor);
 
         /**
+         * Calculates the arm bend angle in degrees.
+         */
+        float get_bend_angle();
+
+        /**
          * @param   source              the tracker to use for data
          * @param   start_pos           the approximate location of the hand (1x3)
          * @param   max_dist_to_start   the maximum distance to the start position the start node can be

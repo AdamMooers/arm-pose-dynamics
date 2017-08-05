@@ -10,7 +10,7 @@
 #define POINT_CLOUD_SCALING_TRACKING 0.16f
 #define PREFILTER_MANHATTAN_DIST 4
 #define PREFILTER_DEPTH_MAX_DIST 0.05f
-#define KMEANS_K 25
+#define KMEANS_K 30
 #define KMEANS_ATTEMPTS 2
 #define KMEANS_ITERATIONS 10
 #define KMEANS_EPSILON 0.002f
@@ -19,7 +19,8 @@
 #define RIGHT_ARM_START_POS {-0.2f, 0.0f, -0.05f}
 #define HAND_MAX_DIST_TO_START 0.2f
 #define SHOULDER_DXDZ_THRESHOLD 1.2f
-#define JOINT_SMOOTHING 0.15f
+#define JOINT_SMOOTHING 0.11f
+#define ARM_LOCKED_ANGLE_THESHOLD_D 23
 #define CALIBRATION_FILE "calibration.xml"
 
 #include <iostream>
@@ -138,9 +139,17 @@ void draw_kmeans_mesh(cv::Mat centers, cv::Mat adj)
  */
 void draw_arm(arm& to_draw)
 {
+    if (to_draw.get_bend_angle() < ARM_LOCKED_ANGLE_THESHOLD_D)
+    {
+        glColor3ub(255, 0, 0);
+    }
+    else
+    {
+        glColor3ub(0, 0, 255);
+    }
+
     glPointSize(15);
     glBegin(GL_POINTS);
-        glColor3ub(0, 0, 255);
         float* curPoint = to_draw.hand_loc.ptr<float>(0);
         glVertex3f(curPoint[0], -curPoint[2], 0);   // Render x->x, -z->y
 

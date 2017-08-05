@@ -7,6 +7,7 @@
 #include "tracker.h"
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+#include <math.h>
 
 void tracker::update_point_cloud(pointCloud source)
 {
@@ -258,6 +259,17 @@ bool arm::update_joints(float smoothing_factor)
 void arm::lerp(cv::Mat target, cv::Mat& current, float t)
 {
 	current = current+(current-target)*-t;
+}
+
+float arm::get_bend_angle()
+{
+	cv::Mat u_arm_vec = hand_loc-elbow_loc;
+	cv::Mat f_arm_vec = elbow_loc-shoulder_loc;
+
+	float cos_angle = f_arm_vec.dot(u_arm_vec);
+	cos_angle /= (cv::norm(f_arm_vec) * cv::norm(u_arm_vec));
+
+	return acos(cos_angle)*180/M_PI;
 }
 
 arm::arm(tracker& source, cv::Mat start_pos, float max_dist_to_start, float dxdz_threshold)
