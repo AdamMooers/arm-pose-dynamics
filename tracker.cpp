@@ -36,6 +36,7 @@ bool tracker::cluster(int n, int max_iter, double epsilon)
 
     // Calculate k-means
     cv::kmeans(source_cloud, k, cluster_ind, crit, n, flags, centers);
+
     return true;
 }
 
@@ -117,7 +118,41 @@ bool arm::update_arm_list(float dx_threshold)
 		return false;
 	}
 
+	cv::Mat adj = source->adj_kmeans;
+	cv::Mat ctrs = source->centers;
+
 	kmean_ind.push_back(hand_ind);
+	int j = 0;
+	for(int cur_ind = hand_ind; j<9; j++)
+	{
+		float furthest_dist = 0;
+
+		// For each hand index
+		for (int n_ind=0; n_ind<adj.cols; n_ind++)
+		{
+			if (adj.at<float>(cur_ind,n_ind) > 0.5 &&					// Is center a neighbor?
+				ctrs.at<float>(cur_ind,2) < ctrs.at<float>(n_ind,2))	// is z greater?
+			{
+				float dist2mean = fabs(ctrs.at<float>(n_ind,0));
+				
+				if (dist2mean > furthest_dist)
+				{
+					furthest_dist = dist2mean;
+					cur_ind = n_ind;
+				}
+			}
+		}
+
+		// furthest_dist does not change if no points were added.
+		if (furthest_dist == 0)
+		{
+			break;
+		}
+
+		// Push to list
+		kmean_ind.push_back(cur_ind);
+	}
+
 }
 
 int arm::find_closest_center_hand()
