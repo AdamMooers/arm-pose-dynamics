@@ -14,10 +14,11 @@
 #define KMEANS_ATTEMPTS 1
 #define KMEANS_ITERATIONS 20
 #define KMEANS_EPSILON 0.002f
-#define KMEANS_CONNECT_THRESHOLD 0.4f
+#define KMEANS_CONNECT_THRESHOLD 0.35f
 #define LEFT_ARM_START_POS {0.2f, 0.0f, -0.1f}
+#define RIGHT_ARM_START_POS {-0.2f, 0.0f, -0.1f}
 #define HAND_MAX_DIST_TO_START 0.2f
-#define SHOULDER_DXDZ_THRESHOLD 2.f
+#define SHOULDER_DXDZ_THRESHOLD 1.5f
 #define CALIBRATION_FILE "calibration.xml"
 
 #include <iostream>
@@ -165,6 +166,9 @@ int main(int argc, char* argv[])
     float left_arm_start_pos[3] = LEFT_ARM_START_POS;
     arm left_arm(tracker_top, cv::Mat(1, 3, CV_32FC1, &left_arm_start_pos), HAND_MAX_DIST_TO_START);
 
+    float right_arm_start_pos[3] = RIGHT_ARM_START_POS;
+    arm right_arm(tracker_top, cv::Mat(1, 3, CV_32FC1, &right_arm_start_pos), HAND_MAX_DIST_TO_START);
+
     cam_top.depth_cam_init();    // Connect to the depth camera
     cam_top.start_stream();
 
@@ -221,7 +225,9 @@ int main(int argc, char* argv[])
                 tracker_top.connect_means(KMEANS_CONNECT_THRESHOLD);
                 draw_kmeans_mesh(tracker_top.centers, tracker_top.adj_kmeans);
                 left_arm.update_arm_list(SHOULDER_DXDZ_THRESHOLD);
+                right_arm.update_arm_list(SHOULDER_DXDZ_THRESHOLD);
                 draw_arm(left_arm);
+                draw_arm(right_arm);
             }
         }
 

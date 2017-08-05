@@ -107,7 +107,7 @@ tracker::tracker(int k)
     centers = cv::Mat(k, 3, CV_32FC1);
 }
 
-bool arm::update_arm_list(float dx_threshold)
+bool arm::update_arm_list(float dxdz_threshold)
 {
 	kmean_ind.clear();
 	int hand_ind = find_closest_center_hand();
@@ -122,8 +122,11 @@ bool arm::update_arm_list(float dx_threshold)
 	cv::Mat ctrs = source->centers;
 
 	kmean_ind.push_back(hand_ind);
-	int j = 0;
-	for(int cur_ind = hand_ind; j<9; j++)
+
+	float x_last = ctrs.at<float>(hand_ind,0);
+	float z_last = ctrs.at<float>(hand_ind,2);
+
+	for(int cur_ind = hand_ind;;)
 	{
 		float furthest_dist = 0;
 
@@ -148,11 +151,27 @@ bool arm::update_arm_list(float dx_threshold)
 		{
 			break;
 		}
+		else
+		{
+			float x_cur = ctrs.at<float>(cur_ind,0);
+			float z_cur = ctrs.at<float>(cur_ind,2);
+			float dx_dz = (x_cur-x_last)/(z_cur-z_last);
+
+			// Correct slope depending on if arm is left or right
+			dx_dz *= start_pos.at<float>(0,0)>0?-1:1;
+
+			if (fabs(dx_dz) >= dxdz_threshold)
+			{
+				break;
+			}
+
+			x_last = x_cur;
+			z_last = z_cur;
+		}
 
 		// Push to list
 		kmean_ind.push_back(cur_ind);
 	}
-
 }
 
 int arm::find_closest_center_hand()

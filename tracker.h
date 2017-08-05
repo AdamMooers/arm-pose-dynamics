@@ -84,7 +84,7 @@ class arm
          * @param   dxdz_threshold      terminate the search when dx/dz > threshold
          * @return  whether or not the arm was identified correctly (was dx_threshold the terminating condition?)
          */
-        bool update_arm_list(float dx_threshold);
+        bool update_arm_list(float dxdz_threshold);
 
         /**
          * Identifies the elbow by finding the point in kmean_ind which has
