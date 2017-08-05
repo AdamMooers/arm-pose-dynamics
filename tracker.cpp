@@ -60,7 +60,6 @@ void tracker::connect_means(float threshold)
 		// for each k-mean
 		for(int r_center=0; r_center<centers.rows; r_center++)
 		{
-	
 			// Add to all except the diagonal
 			if (r_center != curKInd)
 			{
@@ -107,10 +106,18 @@ tracker::tracker(int k)
     centers = cv::Mat(k, 3, CV_32FC1);
 }
 
-bool arm::update_arm_list(float max_dist_to_start, float dx_threshold)
+bool arm::update_arm_list(float dx_threshold)
 {
 	kmean_ind.clear();
+	int hand_ind = find_closest_center_hand();
 
+	// Was the hand_index found?
+	if (hand_ind == -1)
+	{
+		return false;
+	}
+
+	kmean_ind.push_back(hand_ind);
 }
 
 int arm::find_closest_center_hand()
@@ -126,7 +133,7 @@ int arm::find_closest_center_hand()
 		{
 			float deltaDist = cv::norm(source->centers.row(r_c), start_pos);
 
-			if (deltaDist < closest_dist)
+			if (deltaDist < closest_dist && deltaDist < max_dist_to_start)
 			{
 				closest_ind = r_c;
 				closest_dist = deltaDist;
@@ -137,8 +144,9 @@ int arm::find_closest_center_hand()
 	return closest_ind;
 }
 
-arm::arm(tracker& source, cv::Mat start_pos)
+arm::arm(tracker& source, cv::Mat start_pos, float max_dist_to_start)
 {
+	arm::max_dist_to_start = max_dist_to_start;
 	arm::start_pos = start_pos;
 	arm::source = &source;
 }

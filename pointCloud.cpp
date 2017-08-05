@@ -29,6 +29,12 @@ void pointCloud::get_transform_from_cloud(void)
     // Extract the y-vector
     y_vec = y_vec_props(cv::Rect(0,0,1,3)).t();
 
+    // Reverse vector if axis is facing the wrong way
+    if (y_vec.at<float>(2) < 0)
+    {
+        y_vec = -y_vec;
+    }
+
     // Calculate the x-axis
     x_vec = z_vec.cross(y_vec);
 

@@ -6,15 +6,18 @@
  * the result in realtime.
  */
 
-#define POINT_CLOUD_SCALING_CALIB 0.2
-#define POINT_CLOUD_SCALING_TRACKING 0.15
+#define POINT_CLOUD_SCALING_CALIB 0.2f
+#define POINT_CLOUD_SCALING_TRACKING 0.15f
 #define PREFILTER_MANHATTAN_DIST 4
 #define PREFILTER_DEPTH_MAX_DIST 0.05f
 #define KMEANS_K 30
 #define KMEANS_ATTEMPTS 1
 #define KMEANS_ITERATIONS 20
-#define KMEANS_EPSILON 0.002
-#define KMEANS_CONNECT_THRESHOLD 0.4
+#define KMEANS_EPSILON 0.002f
+#define KMEANS_CONNECT_THRESHOLD 0.4f
+#define LEFT_ARM_START_POS {0.2f, 0.0f, -0.1f}
+#define HAND_MAX_DIST_TO_START 0.2f
+#define SHOULDER_DXDZ_THRESHOLD 2.f
 #define CALIBRATION_FILE "calibration.xml"
 
 #include <iostream>
@@ -63,21 +66,21 @@ void draw_pointcloud(cv::Mat cloud)
     glPointSize(2);
     glBegin(GL_POINTS);
 
-    for (int r = 0; r<cloud.rows; r++)
-    {
-        float* curPoint = cloud.ptr<float>(r);
-
-        glColor3ub(0, (256-(int)(curPoint[1]*512))%256, 0);
-
-        if (curMode == CALIBRATION)
+        for (int r = 0; r<cloud.rows; r++)
         {
-            glVertex3f(curPoint[0], curPoint[1], 0);    // Render x->x, y->y
+            float* curPoint = cloud.ptr<float>(r);
+
+            glColor3ub(0, (256-(int)(curPoint[1]*512))%256, 0);
+
+            if (curMode == CALIBRATION)
+            {
+                glVertex3f(curPoint[0], curPoint[1], 0);    // Render x->x, y->y
+            }
+            else
+            {
+                glVertex3f(curPoint[0], -curPoint[2], 0);   // Render x->x, -z->y
+            }
         }
-        else
-        {
-            glVertex3f(curPoint[0], -curPoint[2], 0);   // Render x->x, -z->y
-        }
-    }
 
     glEnd();
 }
@@ -128,6 +131,27 @@ void draw_kmeans_mesh(cv::Mat centers, cv::Mat adj)
     glEnd();
 }
 
+/**
+ * Draws the given arm and highlights the key points.
+ */
+void draw_arm(arm& to_draw)
+{
+    glPointSize(20);
+    glBegin(GL_POINTS);
+    
+        for (std::list<int>::const_iterator ci = to_draw.kmean_ind.begin(); 
+                ci != to_draw.kmean_ind.end(); ++ci)
+        {
+
+            float* curPoint = to_draw.source->centers.ptr<float>(*ci);
+
+            glColor3ub(0, 0, 255);
+            glVertex3f(curPoint[0], -curPoint[2], 0);   // Render x->x, -z->y
+           // glVertex3f(0.2, 0, 0.2); 
+        }
+    glEnd();
+}
+
 int main(int argc, char* argv[])
 {
     parse_input(argc, argv);
@@ -138,6 +162,8 @@ int main(int argc, char* argv[])
 
     depth_cam cam_top(scale_size);
     tracker tracker_top(KMEANS_K);
+    float left_arm_start_pos[3] = LEFT_ARM_START_POS;
+    arm left_arm(tracker_top, cv::Mat(1, 3, CV_32FC1, &left_arm_start_pos), HAND_MAX_DIST_TO_START);
 
     cam_top.depth_cam_init();    // Connect to the depth camera
     cam_top.start_stream();
@@ -149,7 +175,7 @@ int main(int argc, char* argv[])
 
     // Create a window
     sf::RenderWindow window(sf::VideoMode(800, 600), "OpenGL", sf::Style::Default, sf::ContextSettings(24));
-    sf::View graphView(sf::FloatRect(-0.5, -0.75, 1, 0.75));
+    sf::View graphView(sf::FloatRect(-0.5, -0.75, 1, 1.5));
     window.setVerticalSyncEnabled(true);
     window.setActive(true);
     window.setView(graphView);
@@ -182,10 +208,10 @@ int main(int argc, char* argv[])
             cam_top.cloud.get_transform_from_cloud();
         }
 
-        cam_top.cloud.transform_cloud();
-
         if (curMode == TRACKING)
         {
+            cam_top.cloud.transform_cloud();
+
             // Run clustering algorithm
             tracker_top.update_point_cloud(cam_top.cloud);
             bool couldCluster = tracker_top.cluster(KMEANS_ATTEMPTS, KMEANS_ITERATIONS, KMEANS_EPSILON);
@@ -194,6 +220,8 @@ int main(int argc, char* argv[])
             {
                 tracker_top.connect_means(KMEANS_CONNECT_THRESHOLD);
                 draw_kmeans_mesh(tracker_top.centers, tracker_top.adj_kmeans);
+                left_arm.update_arm_list(SHOULDER_DXDZ_THRESHOLD);
+                draw_arm(left_arm);
             }
         }
 
