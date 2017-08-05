@@ -7,18 +7,19 @@
  */
 
 #define POINT_CLOUD_SCALING_CALIB 0.2f
-#define POINT_CLOUD_SCALING_TRACKING 0.15f
+#define POINT_CLOUD_SCALING_TRACKING 0.16f
 #define PREFILTER_MANHATTAN_DIST 4
 #define PREFILTER_DEPTH_MAX_DIST 0.05f
-#define KMEANS_K 30
-#define KMEANS_ATTEMPTS 1
-#define KMEANS_ITERATIONS 20
+#define KMEANS_K 25
+#define KMEANS_ATTEMPTS 2
+#define KMEANS_ITERATIONS 10
 #define KMEANS_EPSILON 0.002f
-#define KMEANS_CONNECT_THRESHOLD 0.35f
-#define LEFT_ARM_START_POS {0.2f, 0.0f, -0.1f}
-#define RIGHT_ARM_START_POS {-0.2f, 0.0f, -0.1f}
+#define KMEANS_CONNECT_THRESHOLD 0.25f
+#define LEFT_ARM_START_POS {0.2f, 0.0f, -0.05f}
+#define RIGHT_ARM_START_POS {-0.2f, 0.0f, -0.05f}
 #define HAND_MAX_DIST_TO_START 0.2f
-#define SHOULDER_DXDZ_THRESHOLD 1.5f
+#define SHOULDER_DXDZ_THRESHOLD 1.2f
+#define JOINT_SMOOTHING 0.15f
 #define CALIBRATION_FILE "calibration.xml"
 
 #include <iostream>
@@ -106,7 +107,7 @@ void draw_kmeans_mesh(cv::Mat centers, cv::Mat adj)
         {
             float* curPoint = centers.ptr<float>(r/1);
 
-            glColor3ub(255, 0, 0);
+            glColor3ub(128, 0, 0);
             glVertex3f(curPoint[0], -curPoint[2], 0); 
         }
 
@@ -123,7 +124,7 @@ void draw_kmeans_mesh(cv::Mat centers, cv::Mat adj)
                 if (adj.at<float>(r,c) > 0.5f)
                 {
                     float* connectedTo = centers.ptr<float>(c);
-                    glColor3ub(255, 0, 0);
+                    glColor3ub(100, 0, 0);
                     glVertex3f(curPoint[0], -curPoint[2], 0);
                     glVertex3f(connectedTo[0], -connectedTo[2], 0);
                 }
@@ -139,28 +140,15 @@ void draw_arm(arm& to_draw)
 {
     glPointSize(15);
     glBegin(GL_POINTS);
-    
-        for (std::list<int>::const_iterator ci = to_draw.kmean_ind.begin(); 
-                ci != to_draw.kmean_ind.end(); ++ci)
-        {
+        glColor3ub(0, 0, 255);
+        float* curPoint = to_draw.hand_loc.ptr<float>(0);
+        glVertex3f(curPoint[0], -curPoint[2], 0);   // Render x->x, -z->y
 
-            float* curPoint = to_draw.source->centers.ptr<float>(*ci);
+        curPoint = to_draw.elbow_loc.ptr<float>(0);
+        glVertex3f(curPoint[0], -curPoint[2], 0);   // Render x->x, -z->y
 
-            // Highlight special points
-            if (*ci == to_draw.elbow_approx_ind || 
-                *ci == to_draw.kmean_ind.back() ||
-                *ci == to_draw.kmean_ind.front())
-            {
-                glColor3ub(0, 0, 255);
-            }
-            else
-            {
-                glColor3ub(0, 64, 64);
-            }
-
-            glVertex3f(curPoint[0], -curPoint[2], 0);   // Render x->x, -z->y
-           // glVertex3f(0.2, 0, 0.2); 
-        }
+        curPoint = to_draw.shoulder_loc.ptr<float>(0);
+        glVertex3f(curPoint[0], -curPoint[2], 0);   // Render x->x, -z->y
     glEnd();
 }
 
@@ -175,10 +163,12 @@ int main(int argc, char* argv[])
     depth_cam cam_top(scale_size);
     tracker tracker_top(KMEANS_K);
     float left_arm_start_pos[3] = LEFT_ARM_START_POS;
-    arm left_arm(tracker_top, cv::Mat(1, 3, CV_32FC1, &left_arm_start_pos), HAND_MAX_DIST_TO_START);
+    arm left_arm(tracker_top, cv::Mat(1, 3, CV_32FC1, &left_arm_start_pos), 
+                    HAND_MAX_DIST_TO_START, SHOULDER_DXDZ_THRESHOLD);
 
     float right_arm_start_pos[3] = RIGHT_ARM_START_POS;
-    arm right_arm(tracker_top, cv::Mat(1, 3, CV_32FC1, &right_arm_start_pos), HAND_MAX_DIST_TO_START);
+    arm right_arm(tracker_top, cv::Mat(1, 3, CV_32FC1, &right_arm_start_pos), 
+                    HAND_MAX_DIST_TO_START, SHOULDER_DXDZ_THRESHOLD);
 
     cam_top.depth_cam_init();    // Connect to the depth camera
     cam_top.start_stream();
@@ -235,15 +225,14 @@ int main(int argc, char* argv[])
             {
                 tracker_top.connect_means(KMEANS_CONNECT_THRESHOLD);
                 draw_kmeans_mesh(tracker_top.centers, tracker_top.adj_kmeans);
-                if (left_arm.update_arm_list(SHOULDER_DXDZ_THRESHOLD))
+
+                if (left_arm.update_joints(JOINT_SMOOTHING))
                 {
-                    left_arm.update_elbow_approx();
                     draw_arm(left_arm);
                 }
 
-                if (right_arm.update_arm_list(SHOULDER_DXDZ_THRESHOLD))
+                if (right_arm.update_joints(JOINT_SMOOTHING))
                 {
-                    right_arm.update_elbow_approx();
                     draw_arm(right_arm);
                 }
             }

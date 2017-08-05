@@ -74,6 +74,10 @@ class arm
         cv::Mat start_pos;
         int elbow_approx_ind;   // The point in the point cloud closest to the elbow
 
+        cv::Mat hand_loc;
+        cv::Mat elbow_loc;
+        cv::Mat shoulder_loc;
+
         /**
          * Calculates the shoulder location from the given hand location. The kmeans
          * center closest to the start position (but with a greater z) is taken as the 
@@ -82,10 +86,9 @@ class arm
          * The next selected point is the furthest neighbor from the global mean that 
          * is in the positive direction.
          * 
-         * @param   dxdz_threshold      terminate the search when dx/dz > threshold
          * @return  whether or not the arm was identified correctly (was dx_threshold the terminating condition?)
          */
-        bool update_arm_list(float dxdz_threshold);
+        bool update_arm_list();
 
         /**
          * Identifies the elbow by finding the point in kmean_ind which maximizes
@@ -94,14 +97,33 @@ class arm
         void update_elbow_approx(void);
 
         /**
+         * Interpolates between two vectors to provide smoothing.
+         * current = current + (target-current)*t
+         * current is updated with the next interpolation step.
+         */
+        void lerp(cv::Mat target, cv::Mat& current, float t);
+
+        /**
+         * Updates the location of the joints based on the current kmeans cloud.
+         *
+         * @param   smoothing_factor
+         */
+        bool update_joints(float smoothing_factor);
+
+        /**
          * @param   source              the tracker to use for data
          * @param   start_pos           the approximate location of the hand (1x3)
          * @param   max_dist_to_start   the maximum distance to the start position the start node can be
+         * @param   dxdz_threshold      terminate the search when dx/dz > threshold
          */
-        arm(tracker& source, cv::Mat start_pos, float max_dist_to_start);
+        arm(tracker& source, cv::Mat start_pos, float max_dist_to_start, float dxdz_threshold);
     
     private:
-        float max_dist_to_start;    //the maximum distance to the start position the start node can be
+        float max_dist_to_start;                        // the maximum distance to the start position the start node can be
+        int tracking_step = 0;                          // Is the algorithm currently tracking the joints?
+        int max_missed_steps = 5;                       // Max number of missed steps permissible
+        int last_tracked_step = -max_missed_steps-1;    // THe last step that was successful
+        float dxdz_threshold;                           // terminate the search when dx/dz > threshold
 
         /**
          * Identifies the point closest to the given start position whose

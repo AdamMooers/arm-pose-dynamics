@@ -107,7 +107,7 @@ tracker::tracker(int k)
     centers = cv::Mat(k, 3, CV_32FC1);
 }
 
-bool arm::update_arm_list(float dxdz_threshold)
+bool arm::update_arm_list()
 {
 	kmean_ind.clear();
 	int hand_ind = find_closest_center_hand();
@@ -125,6 +125,7 @@ bool arm::update_arm_list(float dxdz_threshold)
 
 	float x_last = ctrs.at<float>(hand_ind,0);
 	float z_last = ctrs.at<float>(hand_ind,2);
+	float orientation = start_pos.at<float>(0,0)>0?-1:1;
 
 	for(int cur_ind = hand_ind;;)
 	{
@@ -136,7 +137,7 @@ bool arm::update_arm_list(float dxdz_threshold)
 			if (adj.at<float>(cur_ind,n_ind) > 0.5 &&					// Is center a neighbor?
 				ctrs.at<float>(cur_ind,2) < ctrs.at<float>(n_ind,2))	// is z greater?
 			{
-				float dist2mean = fabs(ctrs.at<float>(n_ind,0));
+				float dist2mean = -orientation*ctrs.at<float>(n_ind,0);
 				
 				if (dist2mean > furthest_dist)
 				{
@@ -158,7 +159,7 @@ bool arm::update_arm_list(float dxdz_threshold)
 			float dx_dz = (x_cur-x_last)/(z_cur-z_last);
 
 			// Correct slope depending on if arm is left or right
-			dx_dz *= start_pos.at<float>(0,0)>0?-1:1;
+			dx_dz *= orientation;
 
 			if (fabs(dx_dz) >= dxdz_threshold)
 			{
@@ -219,9 +220,50 @@ int arm::find_closest_center_hand(void)
 	return closest_ind;
 }
 
-arm::arm(tracker& source, cv::Mat start_pos, float max_dist_to_start)
+bool arm::update_joints(float smoothing_factor)
+{
+	tracking_step++;
+
+	bool can_track = update_arm_list();
+	bool is_tracking = (tracking_step-last_tracked_step) < max_missed_steps;
+
+	if (!can_track)	// No joint data, so don't continue
+	{
+		return is_tracking;
+	}
+
+	update_elbow_approx();
+	last_tracked_step = tracking_step;
+
+	cv::Mat next_hand_loc =  source->centers.row(kmean_ind.front());
+	cv::Mat next_elbow_loc =  source->centers.row(elbow_approx_ind);
+	cv::Mat next_shoulder_loc = source->centers.row(kmean_ind.back());
+
+	if (!is_tracking)
+	{
+		next_hand_loc.copyTo(hand_loc);
+		next_elbow_loc.copyTo(elbow_loc);
+		next_shoulder_loc.copyTo(shoulder_loc);
+	}
+	else
+	{
+		lerp(next_hand_loc, hand_loc, smoothing_factor);
+		lerp(next_elbow_loc, elbow_loc, smoothing_factor);
+		lerp(next_shoulder_loc, shoulder_loc, smoothing_factor);
+	}
+
+	return true;
+}
+
+void arm::lerp(cv::Mat target, cv::Mat& current, float t)
+{
+	current = current+(current-target)*-t;
+}
+
+arm::arm(tracker& source, cv::Mat start_pos, float max_dist_to_start, float dxdz_threshold)
 {
 	arm::max_dist_to_start = max_dist_to_start;
 	arm::start_pos = start_pos;
 	arm::source = &source;
+	arm::dxdz_threshold = dxdz_threshold;
 }
