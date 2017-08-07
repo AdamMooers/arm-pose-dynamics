@@ -19,7 +19,7 @@
 #define RIGHT_ARM_START_POS {-0.2f, 0.0f, -0.05f}
 #define HAND_MAX_DIST_TO_START 0.2f
 #define SHOULDER_DXDZ_THRESHOLD 1.2f
-#define JOINT_SMOOTHING 0.11f
+#define JOINT_SMOOTHING 1.f//0.11f
 #define ARM_LOCKED_ANGLE_THESHOLD_D 23
 #define CALIBRATION_FILE "calibration.xml"
 
@@ -66,14 +66,15 @@ void parse_input(int argc, char* argv[])
 
 void draw_pointcloud(cv::Mat cloud)
 {
-    glPointSize(2);
+    glPointSize(4);
     glBegin(GL_POINTS);
 
         for (int r = 0; r<cloud.rows; r++)
         {
             float* curPoint = cloud.ptr<float>(r);
 
-            glColor3ub(0, (256-(int)(curPoint[1]*512))%256, 0);
+            glColor3ub(0, 0, 0);
+            //glColor3ub(0, (256-(int)(curPoint[1]*512))%256, 0);
 
             if (curMode == CALIBRATION)
             {
@@ -99,7 +100,7 @@ void draw_kmeans_mesh(cv::Mat centers, cv::Mat adj)
         return;
     }
 
-    glPointSize(6);
+    glPointSize(12);
 
     // Draw cloud centers
     glBegin(GL_POINTS);
@@ -108,12 +109,13 @@ void draw_kmeans_mesh(cv::Mat centers, cv::Mat adj)
         {
             float* curPoint = centers.ptr<float>(r/1);
 
-            glColor3ub(128, 0, 0);
+            glColor3ub(255, 0, 0);
             glVertex3f(curPoint[0], -curPoint[2], 0); 
         }
 
     glEnd();
 
+    glLineWidth(3);
     glBegin(GL_LINES);
 
         for (int r = 0; r<centers.rows; r+=1)
@@ -125,7 +127,7 @@ void draw_kmeans_mesh(cv::Mat centers, cv::Mat adj)
                 if (adj.at<float>(r,c) > 0.5f)
                 {
                     float* connectedTo = centers.ptr<float>(c);
-                    glColor3ub(100, 0, 0);
+                    glColor3ub(255, 0, 0);
                     glVertex3f(curPoint[0], -curPoint[2], 0);
                     glVertex3f(connectedTo[0], -connectedTo[2], 0);
                 }
@@ -141,14 +143,16 @@ void draw_arm(arm& to_draw)
 {
     if (to_draw.get_bend_angle() < ARM_LOCKED_ANGLE_THESHOLD_D)
     {
+        glPointSize(35);
         glColor3ub(255, 0, 0);
     }
     else
     {
+        glPointSize(25);
         glColor3ub(0, 0, 255);
     }
 
-    glPointSize(15);
+    
     glBegin(GL_POINTS);
         float* curPoint = to_draw.hand_loc.ptr<float>(0);
         glVertex3f(curPoint[0], -curPoint[2], 0);   // Render x->x, -z->y
@@ -163,6 +167,8 @@ void draw_arm(arm& to_draw)
 
 int main(int argc, char* argv[])
 {
+    sf::Clock clock;
+
     parse_input(argc, argv);
 
     float scale_size = (curMode == CALIBRATION) ?
@@ -207,10 +213,12 @@ int main(int argc, char* argv[])
 
     // run the main loop
     bool running = true;
+    int elapsed = 0;
     while (running)
     {
+        clock.restart();
         // Update window view
-        window.clear(sf::Color::Black);
+        window.clear(sf::Color::White);
 
         cam_top.capture_next_frame();
         cam_top.filter_background(PREFILTER_DEPTH_MAX_DIST, PREFILTER_MANHATTAN_DIST);
@@ -220,14 +228,18 @@ int main(int argc, char* argv[])
         if (curMode == CALIBRATION)
         {
             cam_top.cloud.get_transform_from_cloud();
+            draw_pointcloud(cam_top.cloud.cloud_array);
         }
 
         if (curMode == TRACKING)
         {
             cam_top.cloud.transform_cloud();
+            
+            draw_pointcloud(cam_top.cloud.cloud_array);
 
             // Run clustering algorithm
             tracker_top.update_point_cloud(cam_top.cloud);
+
             bool couldCluster = tracker_top.cluster(KMEANS_ATTEMPTS, KMEANS_ITERATIONS, KMEANS_EPSILON);
 
             if (couldCluster)
@@ -235,9 +247,13 @@ int main(int argc, char* argv[])
                 tracker_top.connect_means(KMEANS_CONNECT_THRESHOLD);
                 draw_kmeans_mesh(tracker_top.centers, tracker_top.adj_kmeans);
 
+                
+                
+
                 if (left_arm.update_joints(JOINT_SMOOTHING))
                 {
                     draw_arm(left_arm);
+                    std::cout << elapsed << "\n";
                 }
 
                 if (right_arm.update_joints(JOINT_SMOOTHING))
@@ -255,10 +271,9 @@ int main(int argc, char* argv[])
                 running = false;    // end the program
             }
         }
-        
-        draw_pointcloud(cam_top.cloud.cloud_array);
 
         window.display();
+        elapsed = clock.getElapsedTime().asMicroseconds();
     }
 
     window.close();

@@ -56,8 +56,9 @@ class depth_cam
          */
         void filter_background(float maxDist, int manhattan);
 
-        cv::Mat cur_src;    // The image in the current state of the pipeline
-        pointCloud cloud;   // The point cloud for the current frame
+        cv::Mat cur_src;            // The image in the current state of the pipeline
+        pointCloud cloud;           // The point cloud for the current frame
+        rs::device * dev = nullptr; // Currently the library only supports a single depth cam
 
         /**
          * @param scale_factor Sets the scale factor of the depth camera.
@@ -68,9 +69,9 @@ class depth_cam
 
     private:
         float scale_factor;                 // The scale factor to apply to the depth image before processing
-        rs::device * dev = nullptr;         // Currently the library only supports a single depth cam
         rs::context * ctx = nullptr;        // Manages all of the realsense devices
         rs::intrinsics depth_intrin;        // Depth intrinics of the frame, updates with each new frame
+        const uint16_t * srcImg;            // A reference to the source image  
 
         /**
          * Runs BFS on the given image starting from a given pixel and expanding outwards.
@@ -99,8 +100,6 @@ class depth_cam
          * @param   output      the image to filter
          */
         int mask_by_cluster_id(cv::Mat& cluster_img, int32_t cluster_id, cv::Mat& output_img);
-
-        const uint16_t * srcImg;            // A reference to the source image  
 };
 
  #endif
