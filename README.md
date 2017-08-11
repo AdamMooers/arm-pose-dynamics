@@ -10,6 +10,7 @@ The following instructions apply for Linux Kernel 4.4.0-xx due to the current li
 * Navigate to the preferred installation directory
 * git clone https://github.com/genuinefaux/arm-pose-dynamics.git
 * cd arm-pose-dynamics && make
+* See calibration instructions
 
 # Tracking Parameters
 
