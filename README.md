@@ -2,6 +2,7 @@
 __Note:__ This repository is in an early stage of development. Use with caution!
 
 A set of joint tracking algorithms for powered, haptic wheelchairs. User pose is calculated from depth camera data.
+See [https://youtu.be/5GpO7MKfVRc](https://youtu.be/5GpO7MKfVRc) for a demo of the tracking.
 
 # Compilation
 
