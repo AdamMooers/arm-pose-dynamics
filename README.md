@@ -1,4 +1,6 @@
 # arm-pose-dynamics
+__Note:__ This repository is in an early stage of development. Use with caution!
+
 A set of joint tracking algorithms for powered, haptic wheelchairs. User pose is calculated from depth camera data.
 
 # Compilation
@@ -34,10 +36,10 @@ ARM_LOCKED_ANGLE_THESHOLD_D
 
 # Image Pipeline
 
+Coming soon...
+
 # Calibration
 Before the tracking can begin, the camera must be calibrated. 
-
-
-* ./pose or ./pose calibrate
+ ./pose calibrate
 
 Note: If a segfault occurs in openCV, try rebuilding the entire project with make clean && make
