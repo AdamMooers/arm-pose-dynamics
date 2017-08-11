@@ -11,6 +11,28 @@ The following instructions apply for Linux Kernel 4.4.0-xx due to the current li
 * git clone https://github.com/genuinefaux/arm-pose-dynamics.git
 * cd arm-pose-dynamics && make
 
+# Tracking Parameters
+
+See pose.cpp to adjust the following parameters.
+
+POINT_CLOUD_SCALING_CALIB  
+POINT_CLOUD_SCALING_TRACKING  
+PREFILTER_MANHATTAN_DIST  
+PREFILTER_DEPTH_MAX_DIST  
+KMEANS_K  
+KMEANS_ATTEMPTS  
+KMEANS_ITERATIONS  
+KMEANS_EPSILON  
+KMEANS_CONNECT_THRESHOLD  
+LEFT_ARM_START_POS  
+RIGHT_ARM_START_POS  
+HAND_MAX_DIST_TO_START  
+SHOULDER_DXDZ_THRESHOLD  
+JOINT_SMOOTHING  
+ARM_LOCKED_ANGLE_THESHOLD_D  
+
+# Image Pipeline
+
 # Calibration
 Before the tracking can begin, the camera must be calibrated. 
 
